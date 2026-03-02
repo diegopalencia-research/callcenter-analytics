@@ -2,7 +2,7 @@
 
 ---
 
-A business intelligence dashboard built around the exact KPIs that call center operations teams track daily — AHT, CSAT, abandon rate, FCR — with a predictive layer that forecasts performance before problems escalate.
+A business intelligence dashboard built around the exact KPIs that call center operations teams track daily (AHT, CSAT, abandon rate, FCR) with a predictive layer that forecasts performance before problems escalate.
 
 Built with Python, scikit-learn, and Streamlit. Deployed on Streamlit Cloud.
 
