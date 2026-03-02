@@ -1,14 +1,6 @@
 """
-app.py — Call Center Performance Analytics Dashboard
-4-page Streamlit application.
-
-Pages:
-  1. Executive Overview   — KPI cards with delta vs previous period
-  2. Trends              — time series with rolling averages + anomaly flags
-  3. Agent Performance   — ranked table with coaching flags
-  4. Prediction          — ML forecast for tomorrow's abandon rate
-
-Run locally:   streamlit run app.py
+app.py — Call Center Performance Analytics
+Mission Control aesthetic — dark, monospace, zero decoration
 """
 
 import os
@@ -20,99 +12,113 @@ import numpy as np
 import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import seaborn as sns
 from sklearn.preprocessing import LabelEncoder
 
-# ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Call Center Analytics",
-    page_icon="📊",
+    page_title="CC Analytics — Palencia Research",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ── Color palette ─────────────────────────────────────────────────────────────
-COLORS = {
-    'primary':   '#1E3A5F',
-    'accent':    '#2ECC71',
-    'warning':   '#E74C3C',
-    'neutral':   '#95A5A6',
-    'light_bg':  '#F8F9FA',
-    'green':     '#27AE60',
-    'red':       '#C0392B',
-    'blue':      '#2980B9',
-    'orange':    '#E67E22',
+C = {
+    'bg':      '#080D14', 'surface':  '#0D1520', 'surface2': '#111C2A',
+    'border':  '#1A2C42', 'border2':  '#243850', 'accent':   '#00C9A7',
+    'accent2': '#0096FF', 'warn':     '#FF4C4C', 'text':     '#E8EDF2',
+    'text2':   '#8899AA', 'text3':    '#4A6070', 'green':    '#00C9A7',
+    'red':     '#FF4C4C', 'mid':      '#4A6070',
 }
 
-# ── Custom CSS ────────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(f"""
 <style>
-    .main-title {
-        font-size: 2rem; font-weight: 700;
-        color: #1E3A5F; margin-bottom: 0.2rem;
-    }
-    .sub-title {
-        font-size: 0.95rem; color: #7F8C8D; margin-bottom: 1.5rem;
-    }
-    .kpi-card {
-        background: white; border-radius: 12px;
-        padding: 1.2rem 1.5rem; text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border-left: 4px solid #1E3A5F;
-    }
-    .kpi-label  { font-size: 0.8rem; color: #7F8C8D; text-transform: uppercase; letter-spacing: 0.05em; }
-    .kpi-value  { font-size: 2rem; font-weight: 700; color: #1E3A5F; }
-    .kpi-delta-pos { font-size: 0.85rem; color: #27AE60; }
-    .kpi-delta-neg { font-size: 0.85rem; color: #C0392B; }
-    .section-header {
-        font-size: 1.1rem; font-weight: 600; color: #2C3E50;
-        border-bottom: 2px solid #1E3A5F; padding-bottom: 0.3rem;
-        margin: 1.5rem 0 1rem 0;
-    }
-    .insight-box {
-        background: #EBF5FB; border-left: 4px solid #2980B9;
-        padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
-        font-size: 0.9rem; color: #1A5276;
-    }
-    .warning-box {
-        background: #FDEDEC; border-left: 4px solid #E74C3C;
-        padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
-        font-size: 0.9rem; color: #922B21;
-    }
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;1,300&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+  html, body, [class*="css"] {{ font-family: 'IBM Plex Sans', sans-serif; background-color: {C['bg']}; color: {C['text']}; }}
+  .stApp {{ background: {C['bg']}; }}
+  section[data-testid="stSidebar"] {{ background: {C['surface']}; border-right: 1px solid {C['border']}; }}
+  section[data-testid="stSidebar"] * {{ font-family: 'IBM Plex Mono', monospace !important; font-size: 0.78rem !important; }}
+  .block-container {{ padding-top: 1.5rem; padding-bottom: 2rem; max-width: 1100px; }}
+  .stSelectbox > div > div, .stMultiSelect > div > div {{ background: {C['surface2']} !important; border: 1px solid {C['border2']} !important; color: {C['text']} !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 0.8rem !important; }}
+  .stSlider > div {{ font-family: 'IBM Plex Mono', monospace !important; }}
+  .stTabs [data-baseweb="tab-list"] {{ background: {C['surface']}; border-bottom: 1px solid {C['border']}; gap: 0; }}
+  .stTabs [data-baseweb="tab"] {{ font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; letter-spacing: 0.08em; color: {C['text2']}; padding: 0.6rem 1.2rem; border: none; background: transparent; }}
+  .stTabs [aria-selected="true"] {{ color: {C['accent']}; border-bottom: 2px solid {C['accent']}; background: transparent; }}
+  .stDataFrame {{ border: 1px solid {C['border']} !important; }}
+  .stDataFrame th {{ background: {C['surface2']} !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 0.72rem !important; color: {C['text2']} !important; letter-spacing: 0.05em; }}
+  .stDataFrame td {{ font-family: 'IBM Plex Mono', monospace !important; font-size: 0.78rem !important; }}
+  [data-testid="metric-container"] {{ background: {C['surface']}; border: 1px solid {C['border']}; border-radius: 4px; padding: 1rem !important; }}
+  [data-testid="metric-container"] label {{ font-family: 'IBM Plex Mono', monospace !important; font-size: 0.7rem !important; letter-spacing: 0.08em; color: {C['text2']} !important; }}
+  [data-testid="metric-container"] [data-testid="stMetricValue"] {{ font-family: 'IBM Plex Mono', monospace !important; font-size: 1.6rem !important; color: {C['text']} !important; }}
+  hr {{ border-color: {C['border']} !important; margin: 1.5rem 0; }}
+  #MainMenu, footer, header {{ visibility: hidden; }}
 </style>
 """, unsafe_allow_html=True)
 
 
-# ── Data loading ──────────────────────────────────────────────────────────────
+def page_header(title, subtitle=None):
+    sub = f'<div style="font-size:0.85rem;color:{C["text2"]};margin-top:0.3rem;">{subtitle}</div>' if subtitle else ''
+    st.markdown(f"""
+    <div style='border-bottom:1px solid {C["border"]};padding-bottom:1rem;margin-bottom:1.5rem;'>
+      <div style='font-family:"IBM Plex Mono",monospace;font-size:0.62rem;letter-spacing:0.18em;color:{C["accent"]};text-transform:uppercase;margin-bottom:0.3rem;'>ANALYTICS SYSTEM / CC-PERF-v2</div>
+      <div style='font-family:"IBM Plex Mono",monospace;font-size:1.5rem;font-weight:600;color:{C["text"]};letter-spacing:-0.01em;'>{title}</div>{sub}
+    </div>""", unsafe_allow_html=True)
+
+def section_title(text):
+    st.markdown(f"""<div style='font-family:"IBM Plex Mono",monospace;font-size:0.7rem;letter-spacing:0.12em;color:{C["text2"]};text-transform:uppercase;border-left:2px solid {C["accent"]};padding-left:0.7rem;margin:1.5rem 0 0.8rem;'>{text}</div>""", unsafe_allow_html=True)
+
+def kpi_card(col, label, value, delta_pct, target=None, invert=False):
+    is_good = (delta_pct < 0) if invert else (delta_pct > 0)
+    arrow   = "+" if delta_pct > 0 else ""
+    color   = C['green'] if is_good else C['red']
+    tgt     = f'<div style="font-size:0.65rem;color:{C["text3"]};margin-top:0.2rem;">target {target}</div>' if target else ''
+    col.markdown(f"""
+    <div style='background:{C["surface"]};border:1px solid {C["border"]};border-top:2px solid {C["accent"]};border-radius:3px;padding:1.1rem 1.2rem;'>
+      <div style='font-family:"IBM Plex Mono",monospace;font-size:0.62rem;letter-spacing:0.12em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.5rem;'>{label}</div>
+      <div style='font-family:"IBM Plex Mono",monospace;font-size:2rem;font-weight:600;color:{C["text"]};line-height:1;'>{value}</div>
+      <div style='font-family:"IBM Plex Mono",monospace;font-size:0.72rem;color:{color};margin-top:0.4rem;'>{arrow}{abs(delta_pct):.1f}% vs prior</div>{tgt}
+    </div>""", unsafe_allow_html=True)
+
+def alert_bar(text, level='warn'):
+    color  = C['warn'] if level == 'warn' else C['accent']
+    bg     = 'rgba(255,76,76,0.06)' if level == 'warn' else 'rgba(0,201,167,0.06)'
+    prefix = '[ALERT]' if level == 'warn' else '[INFO]'
+    st.markdown(f"""
+    <div style='background:{bg};border-left:3px solid {color};padding:0.7rem 1rem;margin:0.8rem 0;border-radius:0 3px 3px 0;'>
+      <span style='font-family:"IBM Plex Mono",monospace;font-size:0.75rem;color:{color};letter-spacing:0.06em;'>{prefix}</span>
+      <span style='font-family:"IBM Plex Mono",monospace;font-size:0.78rem;color:{C["text2"]};margin-left:0.5rem;'>{text}</span>
+    </div>""", unsafe_allow_html=True)
+
+def set_plot_style():
+    plt.rcParams.update({
+        'figure.facecolor': C['bg'], 'axes.facecolor': C['surface'],
+        'axes.edgecolor': C['border'], 'axes.labelcolor': C['text2'],
+        'axes.titlecolor': C['text'], 'xtick.color': C['text3'],
+        'ytick.color': C['text3'], 'text.color': C['text'],
+        'grid.color': C['border'], 'grid.linewidth': 0.5,
+        'font.family': 'monospace', 'font.size': 9,
+        'axes.spines.top': False, 'axes.spines.right': False,
+    })
+
+set_plot_style()
+
 @st.cache_data
 def load_data():
     base = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(base, 'callcenter_data.csv')
-    df = pd.read_csv(path, parse_dates=['date'])
+    df = pd.read_csv(os.path.join(base, 'callcenter_data.csv'), parse_dates=['date'])
     return df
-
 
 @st.cache_resource
 def load_model():
     base = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(base, 'models', 'regressor.pkl')
-    metrics_path = os.path.join(base, 'models', 'reg_metrics.json')
-    if not os.path.exists(path):
-        return None, None, None
-    with open(path, 'rb') as f:
-        models = pickle.load(f)
-    metrics = {}
-    if os.path.exists(metrics_path):
-        with open(metrics_path) as f:
-            metrics = json.load(f)
+    mp   = os.path.join(base, 'models', 'regressor.pkl')
+    mep  = os.path.join(base, 'models', 'reg_metrics.json')
+    if not os.path.exists(mp): return None, None, None
+    with open(mp, 'rb') as f: models = pickle.load(f)
+    metrics = json.load(open(mep)) if os.path.exists(mep) else {}
     return models['rf'], models['lr'], metrics
 
-
-# ── Feature engineering (must match train_model.py) ──────────────────────────
 def engineer_features(df):
-    f = pd.DataFrame(index=df.index)
-    le = LabelEncoder()
-    le.fit(['afternoon', 'morning', 'night'])
+    f  = pd.DataFrame(index=df.index)
+    le = LabelEncoder(); le.fit(['afternoon', 'morning', 'night'])
     f['day_of_week']       = df['day_of_week']
     f['is_monday']         = df['is_monday']
     f['is_night_shift']    = df['is_night_shift']
@@ -123,386 +129,179 @@ def engineer_features(df):
     f['calls_handled']     = df['calls_handled']
     f['csat_score']        = df['csat_score']
     f['fcr_rate']          = df['fcr_rate']
-    f['queue_x_monday']   = df['calls_in_queue'] * df['is_monday']
-    f['queue_x_night']    = df['calls_in_queue'] * df['is_night_shift']
+    f['queue_x_monday']    = df['calls_in_queue'] * df['is_monday']
+    f['queue_x_night']     = df['calls_in_queue'] * df['is_night_shift']
     return f
 
-
-# ── KPI helpers ───────────────────────────────────────────────────────────────
 def get_kpis(df):
-    mid = df['date'].min() + (df['date'].max() - df['date'].min()) / 2
-    curr = df[df['date'] > mid]
-    prev = df[df['date'] <= mid]
+    mid  = df['date'].min() + (df['date'].max() - df['date'].min()) / 2
+    curr = df[df['date'] > mid]; prev = df[df['date'] <= mid]
     def avg(d, c): return d[c].mean() if len(d) > 0 else 0
-    def delta(c, p): return (c - p) / p if p != 0 else 0
-    metrics = {}
+    def delt(c, p): return (c - p) / p if p != 0 else 0
+    out = {}
     for col in ['aht_seconds', 'csat_score', 'abandon_rate', 'fcr_rate']:
         c = avg(curr, col); p = avg(prev, col)
-        metrics[col] = {'value': c, 'delta': delta(c, p)}
-    return metrics
+        out[col] = {'value': c, 'delta': delt(c, p)}
+    return out
 
-
-def render_kpi_card(label, value, delta, format_str, target=None, invert_delta=False):
-    delta_pct = delta * 100
-    is_good   = (delta_pct < 0) if invert_delta else (delta_pct > 0)
-    arrow     = "▲" if delta_pct > 0 else "▼"
-    color_cls = "kpi-delta-pos" if is_good else "kpi-delta-neg"
-    target_html = f"<div style='font-size:0.75rem;color:#95A5A6;'>Target: {target}</div>" if target else ""
-    return f"""
-    <div class='kpi-card'>
-        <div class='kpi-label'>{label}</div>
-        <div class='kpi-value'>{format_str.format(value)}</div>
-        <div class='{color_cls}'>{arrow} {abs(delta_pct):.1f}% vs prev period</div>
-        {target_html}
-    </div>
-    """
-
-
-# ── Sidebar ───────────────────────────────────────────────────────────────────
 def render_sidebar(df):
-    st.sidebar.markdown("### 🎛️ Filters")
-    min_date = df['date'].min().date()
-    max_date = df['date'].max().date()
+    st.sidebar.markdown(f"""
+    <div style='padding:0.5rem 0 1rem;border-bottom:1px solid {C["border"]};margin-bottom:1rem;'>
+      <div style='font-size:0.62rem;letter-spacing:0.18em;color:{C["accent"]};text-transform:uppercase;'>CC-ANALYTICS</div>
+      <div style='font-size:0.85rem;font-weight:600;color:{C["text"]};margin-top:0.2rem;'>PALENCIA RESEARCH</div>
+    </div>""", unsafe_allow_html=True)
 
-    date_range = st.sidebar.date_input(
-        "Date Range",
-        value=(min_date, max_date),
-        min_value=min_date,
-        max_value=max_date
-    )
-
-    shifts = st.sidebar.multiselect(
-        "Shifts", options=['morning', 'afternoon', 'night'],
-        default=['morning', 'afternoon', 'night']
-    )
-
-    agents = st.sidebar.multiselect(
-        "Agents (all if empty)",
-        options=sorted(df['agent_name'].unique()),
-        default=[]
-    )
-
-    return date_range, shifts, agents
-
+    st.sidebar.markdown(f"<div style='font-size:0.62rem;letter-spacing:0.1em;color:{C['text3']};text-transform:uppercase;margin-bottom:0.4rem;'>NAVIGATION</div>", unsafe_allow_html=True)
+    page = st.sidebar.radio("nav", label_visibility="collapsed",
+                             options=["OVERVIEW", "TRENDS", "AGENTS", "PREDICTOR"])
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(f"<div style='font-size:0.62rem;letter-spacing:0.1em;color:{C['text3']};text-transform:uppercase;margin-bottom:0.4rem;'>FILTERS</div>", unsafe_allow_html=True)
+    min_date = df['date'].min().date(); max_date = df['date'].max().date()
+    date_range = st.sidebar.date_input("Date range", value=(min_date, max_date), min_value=min_date, max_value=max_date)
+    shifts = st.sidebar.multiselect("Shift", options=['morning', 'afternoon', 'night'], default=['morning', 'afternoon', 'night'])
+    agents = st.sidebar.multiselect("Agents (all if empty)", options=sorted(df['agent_name'].unique()), default=[])
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(f"""<div style='font-size:0.62rem;color:{C['text3']};letter-spacing:0.06em;line-height:1.8;'>DATASET 2,640 rows<br>AGENTS 20<br>PERIOD Jul–Dec 2024<br>MODEL RF R² 0.919</div>""", unsafe_allow_html=True)
+    return page, date_range, shifts, agents
 
 def apply_filters(df, date_range, shifts, agents):
     if len(date_range) == 2:
         df = df[(df['date'].dt.date >= date_range[0]) & (df['date'].dt.date <= date_range[1])]
-    if shifts:
-        df = df[df['shift'].isin(shifts)]
-    if agents:
-        df = df[df['agent_name'].isin(agents)]
+    if shifts: df = df[df['shift'].isin(shifts)]
+    if agents: df = df[df['agent_name'].isin(agents)]
     return df
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 1 — EXECUTIVE OVERVIEW
-# ══════════════════════════════════════════════════════════════════════════════
 def page_overview(df):
-    st.markdown("<div class='main-title'>📊 Executive Overview</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='sub-title'>{len(df):,} records · {df['agent_id'].nunique()} agents · {df['date'].min().date()} → {df['date'].max().date()}</div>", unsafe_allow_html=True)
-
+    page_header("EXECUTIVE OVERVIEW", f"{len(df):,} records  /  {df['agent_id'].nunique()} agents  /  {df['date'].min().date()} to {df['date'].max().date()}")
     kpis = get_kpis(df)
-
     c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        st.markdown(render_kpi_card(
-            "Avg Handle Time",
-            kpis['aht_seconds']['value'],
-            kpis['aht_seconds']['delta'],
-            "{:.0f} sec",
-            target="< 300 sec",
-            invert_delta=True
-        ), unsafe_allow_html=True)
-
-    with c2:
-        st.markdown(render_kpi_card(
-            "CSAT Score",
-            kpis['csat_score']['value'],
-            kpis['csat_score']['delta'],
-            "{:.2f}",
-            target="> 4.2"
-        ), unsafe_allow_html=True)
-
-    with c3:
-        st.markdown(render_kpi_card(
-            "Abandon Rate",
-            kpis['abandon_rate']['value'] * 100,
-            kpis['abandon_rate']['delta'],
-            "{:.1f}%",
-            target="< 5%",
-            invert_delta=True
-        ), unsafe_allow_html=True)
-
-    with c4:
-        st.markdown(render_kpi_card(
-            "First Call Resolution",
-            kpis['fcr_rate']['value'] * 100,
-            kpis['fcr_rate']['delta'],
-            "{:.1f}%",
-            target="> 70%"
-        ), unsafe_allow_html=True)
-
+    kpi_card(c1, "AVG HANDLE TIME",  f"{kpis['aht_seconds']['value']:.0f}s",  kpis['aht_seconds']['delta']*100,  "< 300s",  invert=True)
+    kpi_card(c2, "CSAT SCORE",       f"{kpis['csat_score']['value']:.2f}",     kpis['csat_score']['delta']*100,   "> 4.20")
+    kpi_card(c3, "ABANDON RATE",     f"{kpis['abandon_rate']['value']*100:.1f}%", kpis['abandon_rate']['delta']*100, "< 5.0%", invert=True)
+    kpi_card(c4, "FIRST CALL RES.",  f"{kpis['fcr_rate']['value']*100:.1f}%", kpis['fcr_rate']['delta']*100,     "> 70%")
     st.markdown("---")
-
-    # Shift comparison
-    st.markdown("<div class='section-header'>📋 Performance by Shift</div>", unsafe_allow_html=True)
-    shift_df = df.groupby('shift').agg(
-        AHT       = ('aht_seconds',  'mean'),
-        CSAT      = ('csat_score',   'mean'),
-        Abandon   = ('abandon_rate', 'mean'),
-        FCR       = ('fcr_rate',     'mean'),
-        Calls     = ('calls_handled', 'sum'),
-    ).round(3).reset_index()
+    section_title("PERFORMANCE BY SHIFT")
+    shift_df = df.groupby('shift').agg(AHT=('aht_seconds','mean'), CSAT=('csat_score','mean'), Abandon=('abandon_rate','mean'), FCR=('fcr_rate','mean'), Calls=('calls_handled','sum')).reset_index()
     shift_df['Abandon'] = (shift_df['Abandon'] * 100).round(2)
     shift_df['FCR']     = (shift_df['FCR']     * 100).round(2)
     shift_df['AHT']     = shift_df['AHT'].round(0).astype(int)
+    shift_df['CSAT']    = shift_df['CSAT'].round(2)
     st.dataframe(shift_df, use_container_width=True, hide_index=True)
+    worst = shift_df.loc[shift_df['Abandon'].idxmax(), 'shift'].upper()
+    alert_bar(f"{worst} shift — abandon rate {shift_df['Abandon'].max():.1f}% exceeds target threshold. Review staffing allocation.")
 
-    # Quick insight
-    worst_shift = shift_df.loc[shift_df['Abandon'].idxmax(), 'shift']
-    st.markdown(f"<div class='warning-box'>⚠️ <strong>{worst_shift.capitalize()} shift</strong> has the highest abandon rate ({shift_df['Abandon'].max():.1f}%). Consider reviewing staffing levels for this shift.</div>", unsafe_allow_html=True)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 2 — TRENDS
-# ══════════════════════════════════════════════════════════════════════════════
 def page_trends(df):
-    st.markdown("<div class='main-title'>📈 KPI Trends</div>", unsafe_allow_html=True)
-
-    window = st.slider("Rolling average window (days)", 3, 14, 7)
-
-    daily = df.groupby('date').agg(
-        aht_seconds  = ('aht_seconds',  'mean'),
-        csat_score   = ('csat_score',   'mean'),
-        abandon_rate = ('abandon_rate', 'mean'),
-        fcr_rate     = ('fcr_rate',     'mean'),
-    ).reset_index()
-
-    for col in ['aht_seconds', 'csat_score', 'abandon_rate', 'fcr_rate']:
+    page_header("TEMPORAL ANALYSIS", "Daily KPI trends with rolling average overlay")
+    window = st.slider("Rolling window (days)", 3, 14, 7)
+    daily = df.groupby('date').agg(aht_seconds=('aht_seconds','mean'), csat_score=('csat_score','mean'), abandon_rate=('abandon_rate','mean'), fcr_rate=('fcr_rate','mean')).reset_index()
+    for col in ['aht_seconds','csat_score','abandon_rate','fcr_rate']:
         daily[f'{col}_roll'] = daily[col].rolling(window, min_periods=1).mean()
+    tab1, tab2, tab3, tab4 = st.tabs(["AHT", "CSAT", "ABANDON RATE", "FCR"])
+    def trend_chart(col, label, target, target_label, color):
+        fig, ax = plt.subplots(figsize=(12, 3.2))
+        ax.fill_between(daily['date'], daily[col], alpha=0.06, color=color)
+        ax.plot(daily['date'], daily[col], alpha=0.2, linewidth=0.8, color=color)
+        ax.plot(daily['date'], daily[f'{col}_roll'], linewidth=1.8, color=color, label=f"{window}d avg")
+        ax.axhline(target, color=C['warn'], linestyle='--', linewidth=0.9, alpha=0.7, label=f"target {target_label}")
+        ax.set_xlabel(''); ax.set_ylabel(label, fontsize=8)
+        ax.legend(fontsize=8, framealpha=0); ax.grid(axis='y', alpha=0.4)
+        ax.set_facecolor(C['surface']); fig.patch.set_facecolor(C['bg'])
+        fig.tight_layout(pad=1.5)
+        st.pyplot(fig, use_container_width=True); plt.close(fig)
+    with tab1: trend_chart('aht_seconds',  'seconds', 300,  '300s',  C['accent2'])
+    with tab2: trend_chart('csat_score',   'score',   4.2,  '4.2',   C['accent'])
+    with tab3: trend_chart('abandon_rate', 'rate',    0.05, '5.0%',  C['warn'])
+    with tab4: trend_chart('fcr_rate',     'rate',    0.70, '70%',   C['accent'])
 
-    tab1, tab2, tab3, tab4 = st.tabs(["AHT", "CSAT", "Abandon Rate", "FCR"])
-
-    def trend_chart(col, label, target, target_label, color, invert_alarm=False):
-        fig, ax = plt.subplots(figsize=(12, 3.5))
-        ax.fill_between(daily['date'], daily[col], alpha=0.15, color=color)
-        ax.plot(daily['date'], daily[col], alpha=0.4, linewidth=0.8, color=color)
-        ax.plot(daily['date'], daily[f'{col}_roll'], linewidth=2.2, color=color, label=f'{window}-day avg')
-        ax.axhline(target, color='#E74C3C', linestyle='--', linewidth=1.2, label=f'Target: {target_label}')
-        ax.set_xlabel(''); ax.set_ylabel(label)
-        ax.legend(fontsize=9); ax.grid(axis='y', alpha=0.3)
-        fig.tight_layout()
-        st.pyplot(fig, use_container_width=True)
-        plt.close(fig)
-
-    with tab1:
-        trend_chart('aht_seconds', 'Seconds', 300, '300 sec', COLORS['primary'])
-    with tab2:
-        trend_chart('csat_score', 'Score', 4.2, '4.2', COLORS['accent'])
-    with tab3:
-        trend_chart('abandon_rate', 'Rate', 0.05, '5%', COLORS['warning'])
-    with tab4:
-        trend_chart('fcr_rate', 'Rate', 0.70, '70%', COLORS['blue'])
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 3 — AGENT PERFORMANCE
-# ══════════════════════════════════════════════════════════════════════════════
 def page_agents(df):
-    st.markdown("<div class='main-title'>👥 Agent Performance</div>", unsafe_allow_html=True)
-
-    agent = df.groupby(['agent_id', 'agent_name', 'experience_months']).agg(
-        avg_aht     = ('aht_seconds',  'mean'),
-        avg_csat    = ('csat_score',   'mean'),
-        avg_abandon = ('abandon_rate', 'mean'),
-        avg_fcr     = ('fcr_rate',     'mean'),
-        total_calls = ('calls_handled', 'sum'),
-        days_worked = ('date',         'nunique'),
-    ).reset_index()
-
-    # Composite score
+    page_header("AGENT PERFORMANCE", "Composite ranking — CSAT 30% / FCR 30% / AHT 20% / Abandon 20%")
+    agent = df.groupby(['agent_id','agent_name','experience_months']).agg(avg_aht=('aht_seconds','mean'), avg_csat=('csat_score','mean'), avg_abandon=('abandon_rate','mean'), avg_fcr=('fcr_rate','mean'), total_calls=('calls_handled','sum'), days_worked=('date','nunique')).reset_index()
     def norm(s, inv=False):
         mn, mx = s.min(), s.max()
         if mx == mn: return pd.Series([0.5]*len(s), index=s.index)
-        n = (s - mn) / (mx - mn)
-        return 1 - n if inv else n
-
-    agent['score'] = (
-        norm(agent['avg_csat'])          * 0.30 +
-        norm(agent['avg_fcr'])           * 0.30 +
-        norm(agent['avg_aht'], inv=True) * 0.20 +
-        norm(agent['avg_abandon'], inv=True) * 0.20
-    )
-    q75 = agent['score'].quantile(0.75)
-    q25 = agent['score'].quantile(0.25)
-    agent['Tier'] = agent['score'].apply(
-        lambda s: '🟢 Top' if s >= q75 else ('🔴 Risk' if s <= q25 else '⚪ Mid')
-    )
-    agent = agent.sort_values('score', ascending=False).reset_index(drop=True)
-    agent.index += 1
-
-    # Display table
-    display = agent[['agent_name', 'experience_months', 'avg_csat', 'avg_aht',
-                      'avg_abandon', 'avg_fcr', 'total_calls', 'Tier', 'score']].copy()
-    display.columns = ['Agent', 'Exp (mo)', 'CSAT', 'AHT (sec)', 'Abandon %', 'FCR %', 'Total Calls', 'Tier', 'Score']
-    display['Abandon %'] = (display['Abandon %'] * 100).round(2)
-    display['FCR %']     = (display['FCR %']     * 100).round(2)
-    display['AHT (sec)'] = display['AHT (sec)'].round(0).astype(int)
+        n = (s - mn) / (mx - mn); return 1-n if inv else n
+    agent['score'] = norm(agent['avg_csat'])*0.30 + norm(agent['avg_fcr'])*0.30 + norm(agent['avg_aht'],inv=True)*0.20 + norm(agent['avg_abandon'],inv=True)*0.20
+    q75 = agent['score'].quantile(0.75); q25 = agent['score'].quantile(0.25)
+    agent['tier'] = agent['score'].apply(lambda s: 'TOP' if s>=q75 else ('RISK' if s<=q25 else 'MID'))
+    agent = agent.sort_values('score', ascending=False).reset_index(drop=True); agent.index += 1
+    display = agent[['agent_name','experience_months','avg_csat','avg_aht','avg_abandon','avg_fcr','total_calls','tier','score']].copy()
+    display.columns = ['Agent','Exp (mo)','CSAT','AHT (s)','Abandon %','FCR %','Total Calls','Tier','Score']
+    display['Abandon %'] = (display['Abandon %']*100).round(2)
+    display['FCR %']     = (display['FCR %']*100).round(2)
+    display['AHT (s)']   = display['AHT (s)'].round(0).astype(int)
     display['CSAT']      = display['CSAT'].round(2)
     display['Score']     = display['Score'].round(3)
-
-    st.dataframe(display, use_container_width=True)
-
-    # Coaching flags
-    risk_agents = agent[agent['Tier'] == '🔴 Risk']
-    if len(risk_agents) > 0:
-        names = ', '.join(risk_agents['agent_name'].tolist())
-        st.markdown(f"<div class='warning-box'>⚠️ <strong>Coaching recommended:</strong> {names} — bottom quartile composite performance.</div>", unsafe_allow_html=True)
-
-    # CSAT vs AHT scatter
-    st.markdown("<div class='section-header'>CSAT vs AHT by Agent</div>", unsafe_allow_html=True)
+    section_title("RANKED TABLE"); st.dataframe(display, use_container_width=True)
+    risk = agent[agent['tier']=='RISK']['agent_name'].tolist()
+    if risk: alert_bar(f"COACHING FLAG — {', '.join(risk)} — bottom quartile composite score.")
+    section_title("CSAT vs AHT")
     fig, ax = plt.subplots(figsize=(10, 4))
-    colors_map = {'🟢 Top': COLORS['green'], '🔴 Risk': COLORS['red'], '⚪ Mid': COLORS['neutral']}
+    cm = {'TOP': C['green'], 'RISK': C['red'], 'MID': C['mid']}
     for _, row in agent.iterrows():
-        ax.scatter(row['avg_aht'], row['avg_csat'],
-                   color=colors_map[row['Tier']], s=80, zorder=3)
-        ax.annotate(row['agent_name'].split()[0], (row['avg_aht'], row['avg_csat']),
-                    fontsize=7, ha='left', va='bottom', xytext=(3, 3), textcoords='offset points')
-    ax.set_xlabel('Avg AHT (seconds)'); ax.set_ylabel('Avg CSAT')
-    ax.grid(alpha=0.3)
-    patches = [mpatches.Patch(color=v, label=k) for k, v in colors_map.items()]
-    ax.legend(handles=patches, fontsize=9)
-    fig.tight_layout()
-    st.pyplot(fig, use_container_width=True)
-    plt.close(fig)
+        ax.scatter(row['avg_aht'], row['avg_csat'], color=cm[row['tier']], s=60, zorder=3, alpha=0.9)
+        ax.annotate(row['agent_name'].split()[0], (row['avg_aht'], row['avg_csat']), fontsize=7, color=C['text2'], xytext=(4,4), textcoords='offset points')
+    ax.set_xlabel('Avg AHT (seconds)'); ax.set_ylabel('Avg CSAT'); ax.grid(alpha=0.3)
+    patches = [mpatches.Patch(color=v, label=k) for k,v in cm.items()]
+    ax.legend(handles=patches, fontsize=8, framealpha=0)
+    ax.set_facecolor(C['surface']); fig.patch.set_facecolor(C['bg'])
+    fig.tight_layout(pad=1.5); st.pyplot(fig, use_container_width=True); plt.close(fig)
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 4 — PREDICTION
-# ══════════════════════════════════════════════════════════════════════════════
-def page_prediction(df):
-    st.markdown("<div class='main-title'>🤖 Abandon Rate Predictor</div>", unsafe_allow_html=True)
-    st.markdown("<div class='sub-title'>Forecast tomorrow's abandon rate from operational inputs</div>", unsafe_allow_html=True)
-
+def page_predictor(df):
+    page_header("ABANDON RATE PREDICTOR", "Random Forest regression — R² 0.919 / 5-fold CV")
     rf, lr, metrics = load_model()
-
-    if rf is None:
-        st.error("Model not trained. Run: `python train_model.py`")
-        return
-
-    # ── Model metrics ──────────────────────────────────────────────────────
-    st.markdown("<div class='section-header'>📊 Model Performance</div>", unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("RF R²",       f"{metrics.get('rf_r2', 0):.3f}")
-    c2.metric("RF RMSE",     f"{metrics.get('rf_rmse', 0):.4f}")
-    c3.metric("Baseline RMSE", f"{metrics.get('baseline_rmse', 0):.4f}")
-    c4.metric("CV R² (5-fold)", f"{metrics.get('cv_mean', 0):.3f} ± {metrics.get('cv_std', 0):.3f}")
-
-    # ── Feature importance ──────────────────────────────────────────────────
-    st.markdown("<div class='section-header'>🔍 Feature Importance</div>", unsafe_allow_html=True)
-    fi = metrics.get('feature_importances', {})
-    fi_df = pd.DataFrame({'Feature': list(fi.keys()), 'Importance': list(fi.values())})
-    fi_df = fi_df.sort_values('Importance', ascending=True).tail(10)
-
-    fig, ax = plt.subplots(figsize=(8, 3.5))
-    ax.barh(fi_df['Feature'], fi_df['Importance'], color=COLORS['primary'], alpha=0.8)
+    if rf is None: st.error("Model not found. Run: python train_model.py"); return
+    section_title("MODEL METRICS")
+    c1,c2,c3,c4 = st.columns(4)
+    c1.metric("RF R²",         f"{metrics.get('rf_r2',0):.3f}")
+    c2.metric("RF RMSE",       f"{metrics.get('rf_rmse',0):.4f}")
+    c3.metric("Baseline RMSE", f"{metrics.get('baseline_rmse',0):.4f}")
+    c4.metric("CV R² 5-fold",  f"{metrics.get('cv_mean',0):.3f} ± {metrics.get('cv_std',0):.3f}")
+    section_title("FEATURE IMPORTANCE")
+    fi    = metrics.get('feature_importances', {})
+    fi_df = pd.DataFrame({'Feature': list(fi.keys()), 'Importance': list(fi.values())}).sort_values('Importance', ascending=True).tail(10)
+    fig, ax = plt.subplots(figsize=(8, 3.2))
+    ax.barh(fi_df['Feature'], fi_df['Importance'], color=C['accent'], alpha=0.8, height=0.5)
     ax.set_xlabel('Importance'); ax.grid(axis='x', alpha=0.3)
-    fig.tight_layout()
-    st.pyplot(fig, use_container_width=True)
-    plt.close(fig)
-
-    # ── Prediction form ────────────────────────────────────────────────────
-    st.markdown("<div class='section-header'>🔮 Tomorrow's Forecast</div>", unsafe_allow_html=True)
-    st.markdown("Adjust the inputs to simulate different scenarios:")
-
-    c1, c2, c3 = st.columns(3)
+    ax.set_facecolor(C['surface']); fig.patch.set_facecolor(C['bg'])
+    fig.tight_layout(pad=1.5); st.pyplot(fig, use_container_width=True); plt.close(fig)
+    st.markdown("---"); section_title("SCENARIO FORECAST")
+    c1,c2,c3 = st.columns(3)
     with c1:
-        day_of_week     = st.selectbox("Day of week", [0,1,2,3,4], format_func=lambda x: ['Mon','Tue','Wed','Thu','Fri'][x])
-        shift           = st.selectbox("Dominant shift", ['morning','afternoon','night'])
+        dow   = st.selectbox("Day of week", [0,1,2,3,4], format_func=lambda x: ['Monday','Tuesday','Wednesday','Thursday','Friday'][x])
+        shift = st.selectbox("Shift", ['morning','afternoon','night'])
     with c2:
-        calls_in_queue  = st.slider("Expected queue depth", 0, 60, 18)
-        aht_seconds     = st.slider("Expected AHT (sec)", 120, 500, 280)
+        queue = st.slider("Queue depth", 0, 60, 18)
+        aht   = st.slider("Expected AHT (sec)", 120, 500, 280)
     with c3:
-        experience_avg  = st.slider("Avg team experience (months)", 1, 36, 12)
-        calls_handled   = st.slider("Expected calls handled", 10, 80, 45)
-
-    is_monday      = int(day_of_week == 0)
-    is_night_shift = int(shift == 'night')
+        exp   = st.slider("Avg team experience (mo)", 1, 36, 12)
+        calls = st.slider("Expected calls handled", 10, 80, 45)
     le = LabelEncoder(); le.fit(['afternoon','morning','night'])
-
-    input_df = pd.DataFrame([{
-        'day_of_week':       day_of_week,
-        'is_monday':         is_monday,
-        'is_night_shift':    is_night_shift,
-        'shift':             shift,
-        'calls_in_queue':    calls_in_queue,
-        'aht_seconds':       aht_seconds,
-        'experience_months': experience_avg,
-        'calls_handled':     calls_handled,
-        'csat_score':        df['csat_score'].mean(),
-        'fcr_rate':          df['fcr_rate'].mean(),
-    }])
-    X_pred = engineer_features(input_df)
-
-    rf_pred = float(rf.predict(X_pred)[0])
-    lr_pred = float(lr.predict(X_pred)[0])
-    rf_pred = max(0, min(rf_pred, 1))
-    lr_pred = max(0, min(lr_pred, 1))
-
-    st.markdown("---")
+    inp = pd.DataFrame([{'day_of_week':dow,'is_monday':int(dow==0),'is_night_shift':int(shift=='night'),'shift':shift,'calls_in_queue':queue,'aht_seconds':aht,'experience_months':exp,'calls_handled':calls,'csat_score':df['csat_score'].mean(),'fcr_rate':df['fcr_rate'].mean()}])
+    X   = engineer_features(inp)
+    rfp = float(np.clip(rf.predict(X)[0], 0, 1))
+    lrp = float(np.clip(lr.predict(X)[0], 0, 1))
+    st.markdown("<br>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
-    with col1:
-        color = "#C0392B" if rf_pred > 0.05 else "#27AE60"
-        st.markdown(f"""
-        <div style='background:white;border-radius:12px;padding:1.5rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);border-top:4px solid {color}'>
-            <div style='font-size:0.85rem;color:#7F8C8D;text-transform:uppercase;'>Random Forest Forecast</div>
-            <div style='font-size:3rem;font-weight:700;color:{color}'>{rf_pred*100:.1f}%</div>
-            <div style='font-size:0.85rem;color:#7F8C8D;'>Target: &lt; 5.0%</div>
-        </div>""", unsafe_allow_html=True)
-    with col2:
-        color2 = "#C0392B" if lr_pred > 0.05 else "#27AE60"
-        st.markdown(f"""
-        <div style='background:white;border-radius:12px;padding:1.5rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);border-top:4px solid {color2}'>
-            <div style='font-size:0.85rem;color:#7F8C8D;text-transform:uppercase;'>Linear Regression Forecast</div>
-            <div style='font-size:3rem;font-weight:700;color:{color2}'>{lr_pred*100:.1f}%</div>
-            <div style='font-size:0.85rem;color:#7F8C8D;'>Linear baseline</div>
-        </div>""", unsafe_allow_html=True)
+    def forecast_card(col, label, val, note=""):
+        over = val > 0.05
+        color = C['warn'] if over else C['accent']
+        status = "ABOVE TARGET" if over else "WITHIN TARGET"
+        col.markdown(f"""<div style='background:{C["surface"]};border:1px solid {C["border"]};border-top:2px solid {color};border-radius:3px;padding:1.5rem;text-align:center;'><div style='font-family:"IBM Plex Mono",monospace;font-size:0.62rem;letter-spacing:0.12em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.5rem;'>{label}</div><div style='font-family:"IBM Plex Mono",monospace;font-size:3rem;font-weight:600;color:{color};line-height:1;'>{val*100:.1f}%</div><div style='font-family:"IBM Plex Mono",monospace;font-size:0.68rem;color:{color};letter-spacing:0.08em;margin-top:0.5rem;'>{status}</div><div style='font-size:0.72rem;color:{C["text3"]};margin-top:0.3rem;'>target &lt; 5.0% {note}</div></div>""", unsafe_allow_html=True)
+    with col1: forecast_card(col1, "RANDOM FOREST",     rfp, "/ primary model")
+    with col2: forecast_card(col2, "LINEAR REGRESSION", lrp, "/ baseline")
+    day_name = ['Monday','Tuesday','Wednesday','Thursday','Friday'][dow]
+    if rfp > 0.05: alert_bar(f"Forecast {rfp*100:.1f}% exceeds 5.0% target on {day_name} {shift.upper()}. Consider increasing staffing or redistributing queue load.", level='warn')
+    else:          alert_bar(f"Forecast {rfp*100:.1f}% within target range on {day_name} {shift.upper()}. Current configuration is sufficient.", level='info')
 
-    if rf_pred > 0.05:
-        st.markdown(f"<div class='warning-box' style='margin-top:1rem'>⚠️ Forecast exceeds 5% target. Consider increasing staffing or redistributing queue load for the {shift} shift.</div>", unsafe_allow_html=True)
-    else:
-        st.markdown(f"<div class='insight-box' style='margin-top:1rem'>✅ Forecast is within target range. Current staffing configuration looks sufficient.</div>", unsafe_allow_html=True)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# MAIN
-# ══════════════════════════════════════════════════════════════════════════════
 def main():
     df = load_data()
-
-    date_range, shifts, agents = render_sidebar(df)
-    df_filtered = apply_filters(df, date_range, shifts, agents)
-
-    if len(df_filtered) == 0:
-        st.warning("No data for selected filters.")
-        return
-
-    page = st.sidebar.radio(
-        "Navigate",
-        ["📊 Executive Overview", "📈 Trends", "👥 Agent Performance", "🤖 Prediction"],
-        label_visibility="collapsed"
-    )
-
-    if page == "📊 Executive Overview":
-        page_overview(df_filtered)
-    elif page == "📈 Trends":
-        page_trends(df_filtered)
-    elif page == "👥 Agent Performance":
-        page_agents(df_filtered)
-    elif page == "🤖 Prediction":
-        page_prediction(df_filtered)
-
+    page, date_range, shifts, agents = render_sidebar(df)
+    df_f = apply_filters(df, date_range, shifts, agents)
+    if len(df_f) == 0: st.warning("No data for selected filters."); return
+    if   page == "OVERVIEW":  page_overview(df_f)
+    elif page == "TRENDS":    page_trends(df_f)
+    elif page == "AGENTS":    page_agents(df_f)
+    elif page == "PREDICTOR": page_predictor(df_f)
 
 if __name__ == '__main__':
     main()
