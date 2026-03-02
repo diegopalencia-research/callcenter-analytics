@@ -1,0 +1,40 @@
+{
+  "rf_r2": 0.9189,
+  "rf_rmse": 0.015,
+  "rf_mae": 0.012,
+  "lr_r2": 0.9221,
+  "cv_mean": 0.9081,
+  "cv_std": 0.0048,
+  "baseline_rmse": 0.0528,
+  "train_size": 2112,
+  "test_size": 528,
+  "n_features": 12,
+  "feature_importances": {
+    "day_of_week": 0.253855,
+    "is_monday": 0.133179,
+    "is_night_shift": 8.2e-05,
+    "shift_enc": 0.000124,
+    "calls_in_queue": 0.242686,
+    "aht_seconds": 0.001511,
+    "experience_months": 0.000585,
+    "calls_handled": 0.001821,
+    "csat_score": 0.001395,
+    "fcr_rate": 0.001578,
+    "queue_x_monday": 0.363073,
+    "queue_x_night": 0.000112
+  },
+  "feature_names": [
+    "day_of_week",
+    "is_monday",
+    "is_night_shift",
+    "shift_enc",
+    "calls_in_queue",
+    "aht_seconds",
+    "experience_months",
+    "calls_handled",
+    "csat_score",
+    "fcr_rate",
+    "queue_x_monday",
+    "queue_x_night"
+  ]
+}
