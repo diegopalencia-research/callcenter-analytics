@@ -1,7 +1,5 @@
 # Call Center Performance Analytics Dashboard
 
-**Live App:** https://callcenter-analytics.streamlit.app/ &nbsp;·&nbsp; **GitHub:** github.com/diegopalencia-research/callcenter-analytics
-
 ---
 
 A business intelligence dashboard built around the exact KPIs that call center operations teams track daily — AHT, CSAT, abandon rate, FCR — with a predictive layer that forecasts performance before problems escalate.
@@ -115,5 +113,20 @@ The call center context serves as an empirical domain for testing whether tempor
 
 ---
 
-*Data Science Portfolio — Applied AI & Analytics*
-*github.com/diegopalencia-research*
+**Live App:** https://english-verbs-nlp.streamlit.app/
+&nbsp;&nbsp;·&nbsp;&nbsp;
+**GitHub:** github.com/diegopalencia-research/english-verbs-nlp
+
+## Author
+
+**Diego José Palencia Robles**
+*Data Science & NLP Projects — Applied AI & Analytics + Machine Learning*
+
+- GitHub; @diegopalencia-research: https://github.com/diegopalencia-research
+- LinkedIn: https://www.linkedin.com/in/diego-jose-palencia-robles/
+
+---
+
+## License
+
+MIT License
