@@ -113,9 +113,7 @@ The call center context serves as an empirical domain for testing whether tempor
 
 ---
 
-**Live App:** https://english-verbs-nlp.streamlit.app/
-&nbsp;&nbsp;·&nbsp;&nbsp;
-**GitHub:** github.com/diegopalencia-research/english-verbs-nlp
+**Live App:** https://callcenter-analytics.streamlit.app/ &nbsp;·&nbsp; **GitHub:** github.com/diegopalencia-research/callcenter-analytics
 
 ## Author
 
