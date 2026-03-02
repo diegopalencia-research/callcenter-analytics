@@ -113,7 +113,7 @@ The call center context serves as an empirical domain for testing whether tempor
 
 ---
 
-**Live App:** https://callcenter-analytics.streamlit.app/ &nbsp;·&nbsp; **GitHub:** github.com/diegopalencia-research/callcenter-analytics
+**Live App:** https://callcenter-analytics.streamlit.app/ &nbsp;·&nbsp; **GitHub:** https://github.com/diegopalencia-research/callcenter-analytics
 
 ## Author
 
