@@ -11,7 +11,7 @@ Built with Python, scikit-learn, and Streamlit. Deployed on Streamlit Cloud.
 ## What It Does
 
 - **Executive Overview** — 4 KPI cards (AHT, CSAT, abandon rate, FCR) with delta vs previous period and shift-level breakdown
-- **Trend Analysis** — Daily time series with configurable rolling averages and anomaly detection
+- **Trend Analysis** — Daily time series with configurable rolling averages
 - **Agent Performance** — Ranked composite score table with tier classification (Top / Mid / Risk) and coaching flags
 - **ML Predictor** — Random Forest model forecasts tomorrow's abandon rate from operational inputs
 
@@ -19,11 +19,12 @@ Built with Python, scikit-learn, and Streamlit. Deployed on Streamlit Cloud.
 
 ## Key Findings
 
-- **Queue depth** is the strongest single predictor of abandon rate (feature importance: ~0.28) — operational implication: staffing decisions should be driven by queue forecasting, not historical averages
-- **Monday morning** abandon rates are consistently 40–60% above weekly average (backlog effect)
+- **Queue × Monday interaction** is the strongest predictor of abandon rate (feature importance: 0.363) — the backlog effect at week start is the dominant driver
+- **Day of week** is the second most important feature (0.254) — temporal patterns outperform agent-level features for abandon rate prediction
+- **Queue depth alone** accounts for 0.243 importance — operational implication: staffing decisions should be driven by queue forecasting, not historical averages
+- **Monday morning** abandon rates are consistently 40–60% above weekly average
 - **Night shift** CSAT is 0.3–0.5 points below morning shift average — training gap or fatigue signal
-- **Agent experience** correlates strongly with FCR (r ≈ 0.71) but weakly with AHT after 12 months — senior agents plateau on speed but continue improving resolution rates
-- **Random Forest R²: 0.81** vs Linear Regression R²: 0.74 vs Baseline RMSE: 0.042
+- **Agent experience** correlates strongly with FCR but plateaus on AHT after 12 months
 
 ---
 
@@ -34,16 +35,27 @@ Algorithm:     Random Forest Regressor + Linear Regression (baseline)
 Target:        Abandon rate (continuous regression)
 Features:      12 engineered features
 Validation:    5-fold cross-validation
-Train/Test:    80/20 split
+Train/Test:    80/20 split (2,112 train / 528 test)
 
-RF R²:         0.81
-RF RMSE:       0.0088
-CV R² (mean):  0.79 ± 0.03
-Baseline RMSE: 0.042
-Improvement:   5x RMSE reduction vs naive baseline
+RF R²:         0.919
+RF RMSE:       0.0150
+RF MAE:        0.0120
+LR R²:         0.922
+CV R² (mean):  0.908 ± 0.005
+Baseline RMSE: 0.0528
+Improvement:   3.5x RMSE reduction vs naive baseline
 ```
 
-**Feature engineering:** day_of_week · is_monday · is_night_shift · shift_encoded · calls_in_queue · aht_seconds · experience_months · calls_handled · csat_score · fcr_rate · queue×monday interaction · queue×night interaction
+**Top features by importance:**
+| Feature | Importance |
+|---|---|
+| queue × monday interaction | 0.363 |
+| day_of_week | 0.254 |
+| calls_in_queue | 0.243 |
+| is_monday | 0.133 |
+| calls_handled | 0.002 |
+
+**All 12 features:** day_of_week · is_monday · is_night_shift · shift_encoded · calls_in_queue · aht_seconds · experience_months · calls_handled · csat_score · fcr_rate · queue×monday interaction · queue×night interaction
 
 ---
 
@@ -51,7 +63,7 @@ Improvement:   5x RMSE reduction vs naive baseline
 
 | Property | Value |
 |---|---|
-| Rows | ~2,600 |
+| Rows | 2,640 |
 | Agents | 20 |
 | Date range | July–December 2024 (6 months) |
 | Grain | Agent × day |
@@ -75,7 +87,6 @@ callcenter-analytics/
 ├── callcenter_data.csv     Simulated dataset
 ├── README.md
 └── requirements.txt
-└── License.md
 ```
 
 ---
@@ -110,7 +121,7 @@ streamlit run app.py       # launch dashboard
 This dashboard operationalizes findings from:
 > *Palencia, D. (2024). Computational Feature Extraction for Human Performance Prediction. OSF Preprints.*
 
-The call center context serves as an empirical domain for testing whether temporal and behavioral operational features can predict quality outcomes at the individual agent level — a research question extending the phonological prediction framework from Project 01.
+The call center context serves as an empirical domain for testing whether temporal and behavioral operational features can predict quality outcomes at the individual agent level a research question extending the phonological prediction framework from Project 01.
 
 ---
 
