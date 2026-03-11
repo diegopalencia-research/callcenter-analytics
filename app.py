@@ -411,7 +411,7 @@ def page_trends(df):
         daily[f'{col}_roll']=daily[col].rolling(window,min_periods=1).mean()
         m,s=daily[col].mean(),daily[col].std()
         daily[f'{col}_anom']=(daily[col]-m).abs()>(2.0*s)
-           def trend_chart(col, label, target, color, pct=False):
+def trend_chart(col, label, target, color, pct=False):
         fig = go.Figure()
         yv = daily[col] * 100 if pct else daily[col]
         yr = daily[f'{col}_roll'] * 100 if pct else daily[f'{col}_roll']
