@@ -90,17 +90,16 @@ st.markdown("""
 # ── UI COMPONENTS ─────────────────────────────────────────────────────────────
 
 def page_header(title, subtitle=None, tag=None):
-    tag_html = f'<span style="background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.1em;color:{C["mint"]};padding:0.15rem 0.55rem;border-radius:2px;margin-left:0.8rem;vertical-align:middle;">{tag}</span>' if tag else ''
-    sub_html = f'<div style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:{C["text2"]};margin-top:0.35rem;letter-spacing:0.04em;">{subtitle}</div>' if subtitle else ''
+    tag_html = f'<span style="background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.12em;color:{C["sky"]};padding:0.18rem 0.6rem;border-radius:4px;margin-left:0.8rem;vertical-align:middle;box-shadow:0 0 8px {C["glow"]};">{tag}</span>' if tag else ''
+    sub_html = f'<div style="font-family:JetBrains Mono,monospace;font-size:0.8rem;color:{C["text2"]};margin-top:0.5rem;letter-spacing:0.04em;">{subtitle}</div>' if subtitle else ''
     st.markdown(f"""
-    <div style='border-bottom:1px solid {C["border"]};padding-bottom:1rem;margin-bottom:1.6rem;'>
-      <div style='font-family:JetBrains Mono,monospace;font-size:0.56rem;letter-spacing:0.26em;color:{C["mint"]};text-transform:uppercase;margin-bottom:0.35rem;opacity:0.7;'>CC-INTELLIGENCE · PALENCIA RESEARCH · 2026</div>
-      <div style='font-family:Syne,sans-serif;font-size:1.9rem;font-weight:700;color:{C["text"]};letter-spacing:0.04em;text-transform:uppercase;line-height:1;'>{title}{tag_html}</div>
-      {sub_html}
+    <div style='border-bottom:1px solid {C["border"]};padding-bottom:1.3rem;margin-bottom:2rem;'>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.28em;color:{C["sky"]};text-transform:uppercase;margin-bottom:0.5rem;opacity:0.75;'>MISSION CONTROL · PALENCIA · 2026</div>
+      <div style='font-family:Syne,sans-serif;font-size:1.9rem;font-weight:800;color:{C["lavender"]};letter-spacing:-0.03em;text-shadow:0 0 18px {C["glow"]};'>{title}{tag_html}</div>{sub_html}
     </div>""", unsafe_allow_html=True)
 
 def section_label(text):
-    st.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.6rem;letter-spacing:0.2em;color:{C["text3"]};text-transform:uppercase;border-left:2px solid {C["mint"]};padding-left:0.75rem;margin:1.8rem 0 0.9rem;">{text}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.64rem;letter-spacing:0.2em;color:{C["sky"]};text-transform:uppercase;border-left:3px solid {C["lavender"]};padding-left:0.9rem;margin:2.2rem 0 1.1rem;opacity:0.9;">{text}</div>', unsafe_allow_html=True)
 
 def kpi_card(col, label, value, delta_pct, target=None, invert=False):
     is_good = (delta_pct < 0) if invert else (delta_pct > 0)
