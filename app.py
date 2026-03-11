@@ -1,9 +1,11 @@
 """
-app.py — Call Center Intelligence Platform v5.0
+app.py — Call Center Intelligence Platform v4.0
 Diego José Palencia Robles · 2026
-Aesthetic: Mission Control / Space Telemetry
 Stack: Streamlit · Supabase · Plotly · scikit-learn
+
+Estilo: Mission Control / Satellite Telemetry
 """
+
 import os, json, pickle
 import pandas as pd
 import numpy as np
@@ -19,7 +21,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ── PALETTE: Deep Space Telemetry ───────────────────────────────────────────
+# ── PALETTE: Deep Space Telemetry ────────────────────────────────────────────
 C = {
     'bg':       '#010307',
     'surface':  '#0a111c',
@@ -55,47 +57,109 @@ TIER_COLORS = {'TOP': '#6ee7b7', 'MID': '#7dd3fc', 'RISK': '#fda4af'}
 
 def rgba(hex_c, a=0.12):
     h = hex_c.lstrip('#')
-    r,g,b = int(h[0:2],16),int(h[2:4],16),int(h[4:6],16)
-    return f"rgba({r},{g},{b},{a})"
+    r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
+    return f"rgba({r},{g},{b},{a})" 
 
-# ── CSS: Deep Space Telemetry ────────────────────────────────────────────────
-st.markdown("""
+# ── CSS: Mission Control Telemetry Style ─────────────────────────────────────
+st.markdown(f"""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
-  html,body,[class*="css"]{{font-family:'Syne',sans-serif;background:{bg};color:{text};}}
-  .stApp{{background:{bg};background-image:radial-gradient(circle at 10% 20%,{glow} 0%,transparent 25%),radial-gradient(circle at 90% 80%,{glow} 0%,transparent 30%);}}
-  section[data-testid="stSidebar"]{{background:{surface};border-right:1px solid {border};box-shadow:2px 0 15px rgba(0,0,0,0.6);}}
-  section[data-testid="stSidebar"] *{{font-family:'JetBrains Mono',monospace !important;font-size:0.78rem !important;}}
-  .block-container{{padding-top:1.2rem;padding-bottom:3rem;max-width:1380px;}}
-  .stSelectbox>div>div,.stMultiSelect>div>div{{background:{surface2} !important;border:1px solid {border2} !important;color:{text} !important;font-family:'JetBrains Mono',monospace !important;font-size:0.78rem !important;border-radius:6px !important;}}
-  .stTabs [data-baseweb="tab-list"]{{background:{surface};border-bottom:1px solid {border2};gap:0;}}
-  .stTabs [data-baseweb="tab"]{{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.12em;color:{text2};padding:0.7rem 1.6rem;background:transparent;text-transform:uppercase;transition:all 0.2s;}}
-  .stTabs [aria-selected="true"]{{color:{sky} !important;border-bottom:2px solid {sky} !important;text-shadow:0 0 8px {glow_line};}}
-  [data-testid="metric-container"]{{background:{surface2} !important;border:1px solid {border};border-top:2px solid {lavender};border-radius:8px;padding:1.1rem !important;box-shadow:0 4px 15px rgba(0,0,0,0.4),inset 0 0 8px {glow};transition:all 0.25s;}}
-  [data-testid="metric-container"]:hover{{box-shadow:0 6px 20px rgba(165,180,252,0.15),inset 0 0 12px {glow};}}
-  .stDataFrame{{border:1px solid {border} !important;border-radius:6px;}}
-  .stDataFrame th{{background:{surface2} !important;font-family:'JetBrains Mono',monospace !important;font-size:0.68rem !important;color:{text3} !important;letter-spacing:0.08em;text-transform:uppercase;}}
-  .stDataFrame td{{font-family:'JetBrains Mono',monospace !important;font-size:0.78rem !important;}}
-  [data-testid="stMetricValue"]{{font-family:'Syne',sans-serif !important;font-weight:700 !important;}}
-  hr{{border-color:{border2} !important;margin:1.8rem 0;}}
-  .stPlotlyChart{{filter:drop-shadow(0 0 10px rgba(125,211,252,0.10));}}
-  #MainMenu,footer,header{{visibility:hidden;}}
-  [data-testid="stSidebarCollapsedControl"]{{display:none !important;}}
-  button[kind="header"]{{display:none !important;}}
-  div[data-testid="stCheckbox"] label span{{font-family:'JetBrains Mono',monospace !important;font-size:0.76rem !important;}}
-</style>
-""".format(**C), unsafe_allow_html=True)
 
+  html, body, [class*="css"] {{
+    font-family: 'Syne', sans-serif;
+    background: {C['bg']};
+    color: {C['text']};
+  }}
+
+  .stApp {{
+    background: {C['bg']};
+    background-image: 
+      radial-gradient(circle at 10% 20%, {C['glow']} 0%, transparent 25%),
+      radial-gradient(circle at 90% 80%, {C['glow']} 0%, transparent 30%);
+  }}
+
+  section[data-testid="stSidebar"] {{
+    background: {C['surface']};
+    border-right: 1px solid {C['border']};
+    box-shadow: 2px 0 15px rgba(0,0,0,0.6);
+  }}
+
+  section[data-testid="stSidebar"] * {{
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.78rem !important;
+  }}
+
+  .block-container {{
+    padding-top: 1.2rem;
+    padding-bottom: 3rem;
+    max-width: 1380px;
+  }}
+
+  .stTabs [data-baseweb="tab-list"] {{
+    background: {C['surface']};
+    border-bottom: 1px solid {C['border2']};
+    gap: 0;
+  }}
+
+  .stTabs [data-baseweb="tab"] {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    color: {C['text2']};
+    padding: 0.7rem 1.6rem;
+    background: transparent;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }}
+
+  .stTabs [aria-selected="true"] {{
+    color: {C['sky']} !important;
+    border-bottom: 2px solid {C['sky']} !important;
+    text-shadow: 0 0 8px {C['glow_line']};
+  }}
+
+  [data-testid="metric-container"] {{
+    background: {C['surface2']} !important;
+    border: 1px solid {C['border']};
+    border-top: 2px solid {C['lavender']};
+    border-radius: 8px;
+    padding: 1.1rem !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 0 8px {C['glow']};
+    transition: all 0.25s;
+  }}
+
+  [data-testid="metric-container"]:hover {{
+    box-shadow: 0 6px 20px rgba(165,180,252,0.15), inset 0 0 12px {C['glow']};
+  }}
+
+  hr {{
+    border-color: {C['border2']} !important;
+    margin: 1.8rem 0;
+  }}
+
+  .js-plotly-plot .plotly .scatterlayer path {{
+    filter: drop-shadow(0 0 5px currentColor);
+  }}
+
+  .stPlotlyChart {{
+    filter: drop-shadow(0 0 10px rgba(125,211,252,0.12));
+  }}
+
+  #MainMenu, footer, header {{
+    visibility: hidden;
+  }}
+</style>
+""", unsafe_allow_html=True)
 
 # ── UI COMPONENTS ─────────────────────────────────────────────────────────────
 
 def page_header(title, subtitle=None, tag=None):
-    tag_html = f'<span style="background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.12em;color:{C["sky"]};padding:0.18rem 0.6rem;border-radius:4px;margin-left:0.8rem;vertical-align:middle;box-shadow:0 0 8px {C["glow"]};">{tag}</span>' if tag else ''
+    tag_html = f'<span style="background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.12em;color:{C["sky"]};padding:0.18rem 0.6rem;border-radius:4px;margin-left:0.8rem;vertical-align:middle; box-shadow:0 0 8px {C["glow"]};">{tag}</span>' if tag else ''
     sub_html = f'<div style="font-family:JetBrains Mono,monospace;font-size:0.8rem;color:{C["text2"]};margin-top:0.5rem;letter-spacing:0.04em;">{subtitle}</div>' if subtitle else ''
     st.markdown(f"""
     <div style='border-bottom:1px solid {C["border"]};padding-bottom:1.3rem;margin-bottom:2rem;'>
       <div style='font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.28em;color:{C["sky"]};text-transform:uppercase;margin-bottom:0.5rem;opacity:0.75;'>MISSION CONTROL · PALENCIA · 2026</div>
-      <div style='font-family:Syne,sans-serif;font-size:1.9rem;font-weight:800;color:{C["lavender"]};letter-spacing:-0.03em;text-shadow:0 0 18px {C["glow"]};'>{title}{tag_html}</div>{sub_html}
+      <div style='font-family:Syne,sans-serif;font-size:1.9rem;font-weight:800;color:{C["lavender"]};letter-spacing:-0.03em;text-shadow:0 0 20px rgba(165,180,252,0.4);'>{title}{tag_html}</div>{sub_html}
     </div>""", unsafe_allow_html=True)
 
 def section_label(text):
@@ -105,43 +169,42 @@ def kpi_card(col, label, value, delta_pct, target=None, invert=False):
     is_good = (delta_pct < 0) if invert else (delta_pct > 0)
     arrow = "▲" if delta_pct > 0 else "▼"
     dc = C['mint'] if is_good else C['rose']
-    bc = C['mint'] if is_good else C['amber']
-    tgt = f'<div style="font-family:JetBrains Mono,monospace;font-size:0.58rem;color:{C["text3"]};margin-top:0.3rem;">TGT {target}</div>' if target else ''
+    tgt = f'<div style="font-family:JetBrains Mono,monospace;font-size:0.58rem;color:{C["text3"]};margin-top:0.3rem;">target {target}</div>' if target else ''
     col.markdown(f"""
-    <div style='background:{C["surface"]};border:1px solid {C["border"]};border-top:1px solid {bc};border-radius:3px;padding:1.1rem 1.2rem;position:relative;overflow:hidden;'>
-      <div style='position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,{bc}00,{bc},{bc}00);'></div>
-      <div style='font-family:JetBrains Mono,monospace;font-size:0.54rem;letter-spacing:0.18em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.5rem;'>{label}</div>
-      <div style='font-family:Syne,sans-serif;font-size:2.4rem;font-weight:700;color:{C["text"]};line-height:1;letter-spacing:0.02em;'>{value}</div>
-      <div style='font-family:JetBrains Mono,monospace;font-size:0.62rem;color:{dc};margin-top:0.4rem;'>{arrow} {abs(delta_pct):.1f}% vs prior</div>
-      {tgt}
+    <div style='background:{C["surface"]};border:1px solid {C["border"]};border-top:2px solid {C["lavender"]};border-radius:8px;padding:1.2rem 1.3rem; box-shadow:0 4px 12px rgba(0,0,0,0.5);'>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.56rem;letter-spacing:0.16em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.6rem;'>{label}</div>
+      <div style='font-family:Syne,sans-serif;font-size:2.2rem;font-weight:700;color:{C["text"]};line-height:1;'>{value}</div>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.65rem;color:{dc};margin-top:0.45rem;'>{arrow} {abs(delta_pct):.1f}% vs prior</div>{tgt}
     </div>""", unsafe_allow_html=True)
 
 def alert_box(text, level='warn'):
     cfg = {
-        'warn':    (C['amber'], rgba(C['amber'],0.05), '⚡'),
-        'danger':  (C['rose'],   rgba(C['rose'],0.05),   '■ CRIT'),
-        'info':    (C['sky'],  rgba(C['sky'],0.05),  '◈ SYS'),
-        'success': (C['mint'],  rgba(C['mint'],0.05),  '✓ OK'),
+        'warn':   (C['amber'],  'rgba(252,211,77,0.08)',  '⚠'),
+        'danger': (C['rose'],   'rgba(253,164,175,0.08)','●'),
+        'info':   (C['sky'],    'rgba(125,211,252,0.08)','◈'),
+        'success':(C['mint'],   'rgba(110,231,183,0.08)','✓')
     }
-    color,bg,icon = cfg.get(level, cfg['warn'])
-    st.markdown(f'<div style="background:{bg};border-left:2px solid {color};padding:0.65rem 1rem;margin:0.5rem 0;border-radius:0 3px 3px 0;"><span style="font-family:JetBrains Mono,monospace;font-size:0.68rem;color:{color};letter-spacing:0.08em;">{icon}</span><span style="font-family:JetBrains Mono,monospace;font-size:0.72rem;color:{C["text2"]};margin-left:0.6rem;">{text}</span></div>', unsafe_allow_html=True)
+    color, bg, icon = cfg.get(level, cfg['warn'])
+    st.markdown(f"""
+    <div style="background:{bg};border-left:3px solid {color};padding:0.8rem 1.2rem;margin:0.7rem 0;border-radius:0 8px 8px 0; box-shadow: inset 0 0 10px {color.replace('1)', '0.15)')};">
+      <span style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:{color};">{icon}</span>
+      <span style="font-family:JetBrains Mono,monospace;font-size:0.78rem;color:{C["text2"]};margin-left:0.7rem;">{text}</span>
+    </div>""", unsafe_allow_html=True)
 
-# Plotly base theme
 PL = dict(
     paper_bgcolor='rgba(0,0,0,0)',
     plot_bgcolor=C['surface'],
     font=dict(family='JetBrains Mono', color=C['text2'], size=10),
-    xaxis=dict(gridcolor=C['border'], linecolor=C['border2'], tickfont=dict(size=9), zeroline=False),
-    yaxis=dict(gridcolor=C['border'], linecolor=C['border2'], tickfont=dict(size=9), zeroline=False),
-    margin=dict(l=8,r=8,t=28,b=8),
-    legend=dict(bgcolor='rgba(0,0,0,0)', bordercolor=C['border'], font=dict(size=9)),
-    hoverlabel=dict(bgcolor=C['surface3'], bordercolor=C['border2'], font=dict(family='JetBrains Mono', size=10)),
+    xaxis=dict(gridcolor=C['border'], linecolor=C['border'], tickfont=dict(size=9)),
+    yaxis=dict(gridcolor=C['border'], linecolor=C['border'], tickfont=dict(size=9)),
+    margin=dict(l=8, r=8, t=28, b=8),
+    legend=dict(bgcolor='rgba(0,0,0,0)', bordercolor=C['border'], font=dict(size=9, family='JetBrains Mono')),
+    hoverlabel=dict(bgcolor=C['surface3'], bordercolor=C['border2'], font=dict(family='JetBrains Mono', size=10))
 )
+
 def ply(fig, h=280, **kw):
-    fig.update_layout(**{**PL,'height':h,**kw}); return fig
-
-
-# ── DATA ──────────────────────────────────────────────────────────────────────
+    fig.update_layout(**{**PL, 'height': h, **kw})
+    return fig
 
 @st.cache_data(ttl=300)
 def load_data():
