@@ -19,41 +19,39 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ── PALETTE: Mission Control ─────────────────────────────────────────────────
-# Deep space blacks + neon telemetry greens/cyans + amber alerts
+# ── PALETTE: Deep Space Telemetry ────────────────────────────────────────────
 C = {
-    'bg':       '#020810',   # near black, deep space
-    'surface':  '#050E1A',   # panel background
-    'surface2': '#071220',   # raised surface
-    'surface3': '#091628',   # deepest panel
-    'border':   '#0D2137',   # dim grid lines
-    'border2':  '#133052',   # active borders
-    'green':    '#00FFD4',   # primary telemetry — neon mint
-    'cyan':     '#00B4FF',   # secondary — electric blue
-    'amber':    '#FFB800',   # warning / alert
-    'red':      '#FF3355',   # critical / danger
-    'lime':     '#B8FF6B',   # positive signal
-    'purple':   '#9B7FE8',   # accent 3
-    'text':     '#C8DFF0',   # main text — cold blue-white
-    'text2':    '#5A7D99',   # secondary text
-    'text3':    '#263D52',   # dim labels
-    'glow_g':   'rgba(0,255,212,0.06)',
-    'glow_c':   'rgba(0,180,255,0.06)',
+    'bg':       '#010307',
+    'surface':  '#0a111c',
+    'surface2': '#111827',
+    'surface3': '#1a2335',
+    'border':   '#1e2a44',
+    'border2':  '#2a3b5c',
+    'lavender': '#a5b4fc',
+    'mint':     '#6ee7b7',
+    'sky':      '#7dd3fc',
+    'rose':     '#fda4af',
+    'amber':    '#fcd34d',
+    'sage':     '#a7f3d0',
+    'accent':   '#a5b4fc',
+    'success':  '#6ee7b7',
+    'warn':     '#fcd34d',
+    'danger':   '#fda4af',
+    'text':     '#e0f2fe',
+    'text2':    '#94a3b8',
+    'text3':    '#475569',
+    'glow':     'rgba(165,180,252,0.12)',
+    'glow_line':'rgba(125,211,252,0.35)',
 }
 
 TEAM_COLORS = {
-    'Tech Support': '#00B4FF',
-    'Billing':      '#9B7FE8',
-    'Sales':        '#B8FF6B',
-    'Retention':    '#FFB800',
-    'General':      '#00FFD4',
+    'Tech Support': '#7dd3fc',
+    'Billing':      '#a5b4fc',
+    'Sales':        '#6ee7b7',
+    'Retention':    '#fcd34d',
+    'General':      '#fda4af',
 }
-TIER_COLORS = {'TOP': '#B8FF6B', 'MID': '#00B4FF', 'RISK': '#FF3355'}
-
-def rgba(hex_c, a=0.12):
-    h = hex_c.lstrip('#')
-    r,g,b = int(h[0:2],16),int(h[2:4],16),int(h[4:6],16)
-    return f"rgba({r},{g},{b},{a})"
+TIER_COLORS = {'TOP': '#6ee7b7', 'MID': '#7dd3fc', 'RISK': '#fda4af'}
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown(f"""
