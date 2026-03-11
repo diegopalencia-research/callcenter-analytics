@@ -56,23 +56,84 @@ TIER_COLORS = {'TOP': '#6EE7B7', 'MID': '#7DD3FC', 'RISK': '#FDA4AF'}
 st.markdown(f"""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
-  html,body,[class*="css"]{{font-family:'Syne',sans-serif;background:{C['bg']};color:{C['text']};}}
-  .stApp{{background:{C['bg']};}}
-  section[data-testid="stSidebar"]{{background:{C['surface']};border-right:1px solid {C['border']};}}
-  section[data-testid="stSidebar"] *{{font-family:'JetBrains Mono',monospace !important;font-size:0.76rem !important;}}
-  .block-container{{padding-top:1rem;padding-bottom:2rem;max-width:1300px;}}
-  .stSelectbox>div>div,.stMultiSelect>div>div{{background:{C['surface2']} !important;border:1px solid {C['border2']} !important;color:{C['text']} !important;font-family:'JetBrains Mono',monospace !important;font-size:0.78rem !important;border-radius:6px !important;}}
-  .stTabs [data-baseweb="tab-list"]{{background:{C['surface']};border-bottom:1px solid {C['border']};gap:0;}}
-  .stTabs [data-baseweb="tab"]{{font-family:'JetBrains Mono',monospace;font-size:0.7rem;letter-spacing:0.1em;color:{C['text2']};padding:0.6rem 1.4rem;background:transparent;text-transform:uppercase;}}
-  .stTabs [aria-selected="true"]{{color:{C['lavender']} !important;border-bottom:2px solid {C['lavender']} !important;background:transparent !important;}}
-  .stDataFrame{{border:1px solid {C['border']} !important;border-radius:6px;}}
-  .stDataFrame th{{background:{C['surface2']} !important;font-family:'JetBrains Mono',monospace !important;font-size:0.68rem !important;color:{C['text3']} !important;letter-spacing:0.08em;text-transform:uppercase;}}
-  .stDataFrame td{{font-family:'JetBrains Mono',monospace !important;font-size:0.78rem !important;}}
-  [data-testid="metric-container"]{{background:{C['surface']} !important;border:1px solid {C['border']} !important;border-radius:8px !important;padding:1rem !important;}}
-  hr{{border-color:{C['border']} !important;margin:1.4rem 0;}}
-  #MainMenu,footer,header{{visibility:hidden;}}
-}
-</style>""", unsafe_allow_html=True)
+  html, body, [class*="css"] {{
+    font-family: 'Syne', sans-serif;
+    background: {C['bg']};
+    color: {C['text']};
+  }}
+  .stApp {{ background: {C['bg']}; }}
+  section[data-testid="stSidebar"] {{
+    background: {C['surface']};
+    border-right: 1px solid {C['border']};
+  }}
+  section[data-testid="stSidebar"] * {{
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.76rem !important;
+  }}
+  .block-container {{
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+    max-width: 1300px;
+  }}
+  .stSelectbox > div > div,
+  .stMultiSelect > div > div {{
+    background: {C['surface2']} !important;
+    border: 1px solid {C['border2']} !important;
+    color: {C['text']} !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.78rem !important;
+    border-radius: 6px !important;
+  }}
+  .stTabs [data-baseweb="tab-list"] {{
+    background: {C['surface']};
+    border-bottom: 1px solid {C['border']};
+    gap: 0;
+  }}
+  .stTabs [data-baseweb="tab"] {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: {C['text2']};
+    padding: 0.6rem 1.4rem;
+    background: transparent;
+    text-transform: uppercase;
+  }}
+  .stTabs [aria-selected="true"] {{
+    color: {C['lavender']} !important;
+    border-bottom: 2px solid {C['lavender']} !important;
+    background: transparent !important;
+  }}
+  .stDataFrame {{
+    border: 1px solid {C['border']} !important;
+    border-radius: 6px;
+  }}
+  .stDataFrame th {{
+    background: {C['surface2']} !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.68rem !important;
+    color: {C['text3']} !important;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }}
+  .stDataFrame td {{
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.78rem !important;
+  }}
+  [data-testid="metric-container"] {{
+    background: {C['surface']} !important;
+    border: 1px solid {C['border']} !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+  }}
+  hr {{
+    border-color: {C['border']} !important;
+    margin: 1.4rem 0;
+  }}
+  #MainMenu, footer, header {{
+    visibility: hidden;
+  }}
+</style>
+""", unsafe_allow_html=True)
 
 
 # ── UI COMPONENTS ─────────────────────────────────────────────────────────────
