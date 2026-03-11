@@ -697,7 +697,7 @@ def page_teams(df):
                 name=row['team'],
                 line=dict(color=TEAM_COLORS.get(row['team'], C['accent']), width=2),
                 fillcolor=TEAM_COLORS.get(row['team'], C['accent']),
-                opacity=0.12,
+                opacity=0.9
             ))
 
         apply_layout(fig, height=380,
