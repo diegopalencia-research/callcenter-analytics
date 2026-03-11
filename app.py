@@ -71,6 +71,13 @@ st.markdown(f"""
   [data-testid="metric-container"]{{background:{C['surface']} !important;border:1px solid {C['border']} !important;border-radius:8px !important;padding:1rem !important;}}
   hr{{border-color:{C['border']} !important;margin:1.4rem 0;}}
   #MainMenu,footer,header{{visibility:hidden;}}
+  /* GLOW espacial en líneas y cards */
+.plotly-graph-div .scatterlayer path { filter: drop-shadow(0 0 6px currentColor); }
+.stPlotlyChart { filter: drop-shadow(0 0 12px rgba(125,211,252,0.15)); }
+[data-testid="metric-container"] {
+    box-shadow: 0 0 15px rgba(196,181,253,0.12) !important;
+    transition: all 0.3s ease;
+}
 </style>""", unsafe_allow_html=True)
 
 
@@ -404,11 +411,27 @@ def page_trends(df):
         daily[f'{col}_roll']=daily[col].rolling(window,min_periods=1).mean()
         m,s=daily[col].mean(),daily[col].std()
         daily[f'{col}_anom']=(daily[col]-m).abs()>(2.0*s)
-    def trend_chart(col,label,target,color,pct=False):
+        def trend_chart(col,label,target,color,pct=False):
         fig=go.Figure()
-        yv=daily[col]*100 if pct else daily[col]; yr=daily[f'{col}_roll']*100 if pct else daily[f'{col}_roll']
+        yv=daily[col]*100 if pct else daily[col]
+        yr=daily[f'{col}_roll']*100 if pct else daily[f'{col}_roll']
         tv=target*100 if pct else target
-        fig.add_trace(go.Scatter(x=daily['date'],y=yv,fill='tozeroy',fillcolor=f'{color}10',line=dict(color='rgba(0,0,0,0)'),showlegend=False,hoverinfo='skip'))
+
+        # ←←← ESTO ES LO QUE ARREGLA EL ERROR
+        r = int(color[1:3], 16)
+        g = int(color[3:5], 16)
+        b = int(color[5:7], 16)
+        fillcolor = f'rgba({r}, {g}, {b}, 0.06)'
+
+        fig.add_trace(go.Scatter(
+            x=daily['date'],
+            y=yv,
+            fill='tozeroy',
+            fillcolor=fillcolor,
+            line=dict(color='rgba(0,0,0,0)'),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
         fig.add_trace(go.Scatter(x=daily['date'],y=yv,mode='lines',name='Daily',line=dict(color=color,width=1,dash='dot'),opacity=0.4))
         fig.add_trace(go.Scatter(x=daily['date'],y=yr,mode='lines',name=f'{window}d avg',line=dict(color=color,width=2.5)))
         fig.add_hline(y=tv,line_dash="dash",line_color=C['rose'],opacity=0.5,annotation_text=f"Target {tv:.0f}{'%' if pct else ''}",annotation_font_size=8,annotation_font_color=C['rose'],annotation_position="bottom right")
@@ -418,7 +441,6 @@ def page_trends(df):
         ply(fig,h=300,yaxis=dict(title=label,gridcolor=C['border']))
         st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':False})
         v=daily[col]
-        v = daily[col]
         sp = f'background:{C["surface2"]};border:1px solid {C["border"]};font-family:JetBrains Mono,monospace;font-size:0.62rem;padding:0.25rem 0.7rem;border-radius:3px;'
         stats_items = [
             ("MIN", f"{v.min()*100:.1f}%" if pct else f"{v.min():.1f}", C["mint"]),
