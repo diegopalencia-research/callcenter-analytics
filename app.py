@@ -2,6 +2,8 @@
 app.py — Call Center Intelligence Platform v4.0
 Diego José Palencia Robles · 2026
 Stack: Streamlit · Supabase · Plotly · scikit-learn
+
+Estilo: Mission Control / Satellite Telemetry
 """
 
 import os, json, pickle
@@ -19,136 +21,144 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ── PALETTE: Deep Space + DMT Pastels ────────────────────────────────────────
+# ── PALETTE: Deep Space Telemetry ────────────────────────────────────────────
 C = {
-    'bg':       '#030712',
-    'surface':  '#080F1C',
-    'surface2': '#0D1626',
-    'surface3': '#111D30',
-    'border':   '#162034',
-    'border2':  '#1C2B45',
-    'lavender': '#C4B5FD',
-    'mint':     '#6EE7B7',
-    'sky':      '#7DD3FC',
-    'rose':     '#FDA4AF',
-    'amber':    '#FCD34D',
-    'sage':     '#A7F3D0',
-    'accent':   '#C4B5FD',
-    'success':  '#6EE7B7',
-    'warn':     '#FCD34D',
-    'danger':   '#FDA4AF',
-    'text':     '#EEF2FF',
-    'text2':    '#8B9FBF',
-    'text3':    '#374E6A',
-    'glow':     'rgba(196,181,253,0.08)',
+    'bg':       '#010307',
+    'surface':  '#0a111c',
+    'surface2': '#111827',
+    'surface3': '#1a2335',
+    'border':   '#1e2a44',
+    'border2':  '#2a3b5c',
+    'lavender': '#a5b4fc',
+    'mint':     '#6ee7b7',
+    'sky':      '#7dd3fc',
+    'rose':     '#fda4af',
+    'amber':    '#fcd34d',
+    'sage':     '#a7f3d0',
+    'accent':   '#a5b4fc',
+    'success':  '#6ee7b7',
+    'warn':     '#fcd34d',
+    'danger':   '#fda4af',
+    'text':     '#e0f2fe',
+    'text2':    '#94a3b8',
+    'text3':    '#475569',
+    'glow':     'rgba(165,180,252,0.12)',
+    'glow_line':'rgba(125,211,252,0.35)',
 }
 
 TEAM_COLORS = {
-    'Tech Support': '#7DD3FC',
-    'Billing':      '#C4B5FD',
-    'Sales':        '#6EE7B7',
-    'Retention':    '#FCD34D',
-    'General':      '#FDA4AF',
+    'Tech Support': '#7dd3fc',
+    'Billing':      '#a5b4fc',
+    'Sales':        '#6ee7b7',
+    'Retention':    '#fcd34d',
+    'General':      '#fda4af',
 }
-TIER_COLORS = {'TOP': '#6EE7B7', 'MID': '#7DD3FC', 'RISK': '#FDA4AF'}
+TIER_COLORS = {'TOP': '#6ee7b7', 'MID': '#7dd3fc', 'RISK': '#fda4af'}
 
-# ── CSS ───────────────────────────────────────────────────────────────────────
+# ── CSS: Mission Control Telemetry Style ─────────────────────────────────────
 st.markdown(f"""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
   html, body, [class*="css"] {{
     font-family: 'Syne', sans-serif;
     background: {C['bg']};
     color: {C['text']};
   }}
-  .stApp {{ background: {C['bg']}; }}
+
+  .stApp {{
+    background: {C['bg']};
+    background-image: 
+      radial-gradient(circle at 10% 20%, {C['glow']} 0%, transparent 25%),
+      radial-gradient(circle at 90% 80%, {C['glow']} 0%, transparent 30%);
+  }}
+
   section[data-testid="stSidebar"] {{
     background: {C['surface']};
     border-right: 1px solid {C['border']};
+    box-shadow: 2px 0 15px rgba(0,0,0,0.6);
   }}
+
   section[data-testid="stSidebar"] * {{
     font-family: 'JetBrains Mono', monospace !important;
-    font-size: 0.76rem !important;
-  }}
-  .block-container {{
-    padding-top: 1rem;
-    padding-bottom: 2rem;
-    max-width: 1300px;
-  }}
-  .stSelectbox > div > div,
-  .stMultiSelect > div > div {{
-    background: {C['surface2']} !important;
-    border: 1px solid {C['border2']} !important;
-    color: {C['text']} !important;
-    font-family: 'JetBrains Mono', monospace !important;
     font-size: 0.78rem !important;
-    border-radius: 6px !important;
   }}
+
+  .block-container {{
+    padding-top: 1.2rem;
+    padding-bottom: 3rem;
+    max-width: 1380px;
+  }}
+
   .stTabs [data-baseweb="tab-list"] {{
     background: {C['surface']};
-    border-bottom: 1px solid {C['border']};
+    border-bottom: 1px solid {C['border2']};
     gap: 0;
   }}
+
   .stTabs [data-baseweb="tab"] {{
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
     color: {C['text2']};
-    padding: 0.6rem 1.4rem;
+    padding: 0.7rem 1.6rem;
     background: transparent;
     text-transform: uppercase;
+    transition: all 0.2s;
   }}
+
   .stTabs [aria-selected="true"] {{
-    color: {C['lavender']} !important;
-    border-bottom: 2px solid {C['lavender']} !important;
-    background: transparent !important;
+    color: {C['sky']} !important;
+    border-bottom: 2px solid {C['sky']} !important;
+    text-shadow: 0 0 8px {C['glow_line']};
   }}
-  .stDataFrame {{
-    border: 1px solid {C['border']} !important;
-    border-radius: 6px;
-  }}
-  .stDataFrame th {{
-    background: {C['surface2']} !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 0.68rem !important;
-    color: {C['text3']} !important;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }}
-  .stDataFrame td {{
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 0.78rem !important;
-  }}
+
   [data-testid="metric-container"] {{
-    background: {C['surface']} !important;
-    border: 1px solid {C['border']} !important;
-    border-radius: 8px !important;
-    padding: 1rem !important;
+    background: {C['surface2']} !important;
+    border: 1px solid {C['border']};
+    border-top: 2px solid {C['lavender']};
+    border-radius: 8px;
+    padding: 1.1rem !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 0 8px {C['glow']};
+    transition: all 0.25s;
   }}
+
+  [data-testid="metric-container"]:hover {{
+    box-shadow: 0 6px 20px rgba(165,180,252,0.15), inset 0 0 12px {C['glow']};
+  }}
+
   hr {{
-    border-color: {C['border']} !important;
-    margin: 1.4rem 0;
+    border-color: {C['border2']} !important;
+    margin: 1.8rem 0;
   }}
+
+  .js-plotly-plot .plotly .scatterlayer path {{
+    filter: drop-shadow(0 0 5px currentColor);
+  }}
+
+  .stPlotlyChart {{
+    filter: drop-shadow(0 0 10px rgba(125,211,252,0.12));
+  }}
+
   #MainMenu, footer, header {{
     visibility: hidden;
   }}
 </style>
 """, unsafe_allow_html=True)
 
-
 # ── UI COMPONENTS ─────────────────────────────────────────────────────────────
 
 def page_header(title, subtitle=None, tag=None):
-    tag_html = f'<span style="background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.1em;color:{C["lavender"]};padding:0.15rem 0.55rem;border-radius:3px;margin-left:0.7rem;vertical-align:middle;">{tag}</span>' if tag else ''
-    sub_html = f'<div style="font-family:JetBrains Mono,monospace;font-size:0.78rem;color:{C["text2"]};margin-top:0.4rem;">{subtitle}</div>' if subtitle else ''
+    tag_html = f'<span style="background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.12em;color:{C["sky"]};padding:0.18rem 0.6rem;border-radius:4px;margin-left:0.8rem;vertical-align:middle; box-shadow:0 0 8px {C["glow"]};">{tag}</span>' if tag else ''
+    sub_html = f'<div style="font-family:JetBrains Mono,monospace;font-size:0.8rem;color:{C["text2"]};margin-top:0.5rem;letter-spacing:0.04em;">{subtitle}</div>' if subtitle else ''
     st.markdown(f"""
-    <div style='border-bottom:1px solid {C["border"]};padding-bottom:1.1rem;margin-bottom:1.8rem;'>
-      <div style='font-family:JetBrains Mono,monospace;font-size:0.56rem;letter-spacing:0.24em;color:{C["lavender"]};text-transform:uppercase;margin-bottom:0.4rem;opacity:0.7;'>CC-INTELLIGENCE · PALENCIA RESEARCH · 2026</div>
-      <div style='font-family:Syne,sans-serif;font-size:1.7rem;font-weight:700;color:{C["text"]};letter-spacing:-0.02em;'>{title}{tag_html}</div>{sub_html}
+    <div style='border-bottom:1px solid {C["border"]};padding-bottom:1.3rem;margin-bottom:2rem;'>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.28em;color:{C["sky"]};text-transform:uppercase;margin-bottom:0.5rem;opacity:0.75;'>MISSION CONTROL · PALENCIA · 2026</div>
+      <div style='font-family:Syne,sans-serif;font-size:1.9rem;font-weight:800;color:{C["text"]};letter-spacing:-0.03em;text-shadow:0 0 12px {C["glow"]}'>{title}{tag_html}</div>{sub_html}
     </div>""", unsafe_allow_html=True)
 
 def section_label(text):
-    st.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.62rem;letter-spacing:0.18em;color:{C["text3"]};text-transform:uppercase;border-left:2px solid {C["lavender"]};padding-left:0.75rem;margin:2rem 0 1rem;">{text}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.64rem;letter-spacing:0.2em;color:{C["sky"]};text-transform:uppercase;border-left:3px solid {C["lavender"]};padding-left:0.9rem;margin:2.2rem 0 1.1rem;opacity:0.9;">{text}</div>', unsafe_allow_html=True)
 
 def kpi_card(col, label, value, delta_pct, target=None, invert=False):
     is_good = (delta_pct < 0) if invert else (delta_pct > 0)
@@ -156,28 +166,40 @@ def kpi_card(col, label, value, delta_pct, target=None, invert=False):
     dc = C['mint'] if is_good else C['rose']
     tgt = f'<div style="font-family:JetBrains Mono,monospace;font-size:0.58rem;color:{C["text3"]};margin-top:0.3rem;">target {target}</div>' if target else ''
     col.markdown(f"""
-    <div style='background:{C["surface"]};border:1px solid {C["border"]};border-top:2px solid {C["lavender"]};border-radius:8px;padding:1.2rem 1.3rem;'>
+    <div style='background:{C["surface"]};border:1px solid {C["border"]};border-top:2px solid {C["lavender"]};border-radius:8px;padding:1.2rem 1.3rem; box-shadow:0 4px 12px rgba(0,0,0,0.5);'>
       <div style='font-family:JetBrains Mono,monospace;font-size:0.56rem;letter-spacing:0.16em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.6rem;'>{label}</div>
       <div style='font-family:Syne,sans-serif;font-size:2.2rem;font-weight:700;color:{C["text"]};line-height:1;'>{value}</div>
-      <div style='font-family:JetBrains Mono,monospace;font-size:0.65rem;color:{dc};margin-top:0.45rem;'>{arrow} {abs(delta_pct):.1f}% vs prior period</div>{tgt}
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.65rem;color:{dc};margin-top:0.45rem;'>{arrow} {abs(delta_pct):.1f}% vs prior</div>{tgt}
     </div>""", unsafe_allow_html=True)
 
 def alert_box(text, level='warn'):
-    cfg = {'warn':(C['amber'],'rgba(252,211,77,0.06)','⚠'),'danger':(C['rose'],'rgba(253,164,175,0.06)','●'),'info':(C['sky'],'rgba(125,211,252,0.06)','◈'),'success':(C['mint'],'rgba(110,231,183,0.06)','✓')}
-    color,bg,icon = cfg.get(level,cfg['warn'])
-    st.markdown(f'<div style="background:{bg};border-left:2px solid {color};padding:0.7rem 1rem;margin:0.6rem 0;border-radius:0 6px 6px 0;"><span style="font-family:JetBrains Mono,monospace;font-size:0.7rem;color:{color};">{icon}</span><span style="font-family:JetBrains Mono,monospace;font-size:0.74rem;color:{C["text2"]};margin-left:0.6rem;">{text}</span></div>', unsafe_allow_html=True)
+    cfg = {
+        'warn':   (C['amber'],  'rgba(252,211,77,0.08)',  '⚠'),
+        'danger': (C['rose'],   'rgba(253,164,175,0.08)','●'),
+        'info':   (C['sky'],    'rgba(125,211,252,0.08)','◈'),
+        'success':(C['mint'],   'rgba(110,231,183,0.08)','✓')
+    }
+    color, bg, icon = cfg.get(level, cfg['warn'])
+    st.markdown(f"""
+    <div style="background:{bg};border-left:3px solid {color};padding:0.8rem 1.2rem;margin:0.7rem 0;border-radius:0 8px 8px 0; box-shadow: inset 0 0 10px {color.replace('1)', '0.15)')};">
+      <span style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:{color};">{icon}</span>
+      <span style="font-family:JetBrains Mono,monospace;font-size:0.78rem;color:{C["text2"]};margin-left:0.7rem;">{text}</span>
+    </div>""", unsafe_allow_html=True)
 
-PL = dict(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor=C['surface'],
-          font=dict(family='JetBrains Mono',color=C['text2'],size=10),
-          xaxis=dict(gridcolor=C['border'],linecolor=C['border'],tickfont=dict(size=9)),
-          yaxis=dict(gridcolor=C['border'],linecolor=C['border'],tickfont=dict(size=9)),
-          margin=dict(l=8,r=8,t=28,b=8),
-          legend=dict(bgcolor='rgba(0,0,0,0)',bordercolor=C['border'],font=dict(size=9,family='JetBrains Mono')),
-          hoverlabel=dict(bgcolor=C['surface3'],bordercolor=C['border2'],font=dict(family='JetBrains Mono',size=10)))
+PL = dict(
+    paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor=C['surface'],
+    font=dict(family='JetBrains Mono', color=C['text2'], size=10),
+    xaxis=dict(gridcolor=C['border'], linecolor=C['border'], tickfont=dict(size=9)),
+    yaxis=dict(gridcolor=C['border'], linecolor=C['border'], tickfont=dict(size=9)),
+    margin=dict(l=8, r=8, t=28, b=8),
+    legend=dict(bgcolor='rgba(0,0,0,0)', bordercolor=C['border'], font=dict(size=9, family='JetBrains Mono')),
+    hoverlabel=dict(bgcolor=C['surface3'], bordercolor=C['border2'], font=dict(family='JetBrains Mono', size=10))
+)
 
 def ply(fig, h=280, **kw):
-    fig.update_layout(**{**PL,'height':h,**kw}); return fig
-
+    fig.update_layout(**{**PL, 'height': h, **kw})
+    return fig
 
 # ── DATA ──────────────────────────────────────────────────────────────────────
 
@@ -203,29 +225,28 @@ def load_data():
                 if c in df.columns: df[c] = pd.to_numeric(df[c], errors='coerce')
             return df, "supabase", None
     except KeyError as e:
-        err = f"Missing secret key: {e}. Go to Streamlit Cloud → App Settings → Secrets and add:\nSUPABASE_URL = \"https://xxx.supabase.co\"\nSUPABASE_KEY = \"your-anon-key\""
+        err = f"Missing secret key: {e}. Go to Streamlit Cloud → App Settings → Secrets and add SUPABASE_URL and SUPABASE_KEY"
     except ImportError:
-        err = "Package 'supabase' missing. Ensure requirements.txt contains: supabase>=2.0"
+        err = "Package 'supabase' missing. Add to requirements.txt: supabase>=2.0"
     except Exception as e:
         err = f"{type(e).__name__}: {e}"
 
     base = os.path.dirname(os.path.abspath(__file__))
-    for name in ['callcenter_data.csv']:
-        p = os.path.join(base, name)
-        if os.path.exists(p):
-            df = pd.read_csv(p, parse_dates=['date'])
-            return df, "csv", err
-    st.error("No data source. Connect Supabase or add callcenter_data.csv to repo."); st.stop()
+    p = os.path.join(base, 'callcenter_data.csv')
+    if os.path.exists(p):
+        df = pd.read_csv(p, parse_dates=['date'])
+        return df, "csv", err
+    st.error("No data source. Connect Supabase or add callcenter_data.csv"); st.stop()
 
 @st.cache_resource
 def load_model():
     base = os.path.dirname(os.path.abspath(__file__))
-    mp  = os.path.join(base,'models','regressor.pkl')
+    mp = os.path.join(base,'models','regressor.pkl')
     mep = os.path.join(base,'models','reg_metrics.json')
     if not os.path.exists(mp): return None, None, {}
     with open(mp,'rb') as f: models = pickle.load(f)
     metrics = json.load(open(mep)) if os.path.exists(mep) else {}
-    return models['rf'], models['lr'], metrics
+    return models.get('rf'), models.get('lr'), metrics
 
 def engineer_features(df):
     f=pd.DataFrame(index=df.index); le=LabelEncoder(); le.fit(['afternoon','morning','night'])
@@ -255,7 +276,6 @@ def norm_score(s, invert=False):
     if mx==mn: return pd.Series([0.5]*len(s),index=s.index)
     n=(s-mn)/(mx-mn); return 1-n if invert else n
 
-
 # ── SIDEBAR ───────────────────────────────────────────────────────────────────
 
 def render_sidebar(df, source, err):
@@ -282,7 +302,6 @@ def render_sidebar(df, source, err):
     if 'year' in df.columns:
         avail=sorted(df['year'].unique())
         years=st.sidebar.multiselect("Year",options=avail,default=avail)
-
     st.sidebar.markdown("---")
     sc,sl = (C['mint'],"● SUPABASE LIVE") if source=="supabase" else (C['amber'],"○ CSV FALLBACK")
     st.sidebar.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.6rem;color:{sc};letter-spacing:0.08em;margin-bottom:0.5rem;">{sl}</div>', unsafe_allow_html=True)
@@ -301,21 +320,16 @@ def apply_filters(df, date_range, shifts, teams, agents, years):
     if years and 'year' in df.columns: df=df[df['year'].isin(years)]
     return df
 
-
 # ── PAGE: HOME ────────────────────────────────────────────────────────────────
 
 def page_home():
-    # Pre-compute HTML fragments to avoid nested f-string issues
     tech_stack = ["Python 3.12","Streamlit","Supabase","PostgreSQL","Plotly","scikit-learn","Random Forest","Pandas","NumPy"]
     ps = f'background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.6rem;letter-spacing:0.06em;color:{C["text2"]};padding:0.3rem 0.8rem;border-radius:4px;'
     tech_pills = "".join([f'<span style="{ps}">{t}</span>' for t in tech_stack])
-
     ml_items = [("RF R²","0.919",C['lavender']),("CV R² 5-fold","0.908",C['sky']),("RMSE Improvement","3.5×",C['mint']),("Features","12",C['amber'])]
     ml_grid = "".join([f'<div><div style="font-family:JetBrains Mono,monospace;font-size:0.56rem;color:{C["text3"]};letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.2rem;">{l}</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:700;color:{c};">{v}</div></div>' for l,v,c in ml_items])
-
     ds_items = [("Rows","6,829"),("Agents","25"),("Period","Jan 2025 → Mar 2026"),("Teams","5"),("Grain","Agent × Day"),("KPIs","8")]
     ds_rows = "".join([f'<div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid {C["border"]};"><span style="font-family:JetBrains Mono,monospace;font-size:0.67rem;color:{C["text3"]};">{k}</span><span style="font-family:JetBrains Mono,monospace;font-size:0.67rem;color:{C["text"]};font-weight:500;">{v}</span></div>' for k,v in ds_items])
-
     kpi_items = [("AHT","< 300s",C['sky']),("CSAT","> 4.20 / 5.0",C['lavender']),("Abandon Rate","< 5.0%",C['rose']),("FCR","> 70%",C['mint']),("Escalation","< 8%",C['amber']),("Transfer","< 10%",C['sage'])]
     kpi_rows = "".join([f'<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;border-bottom:1px solid {C["border"]};"><span style="font-family:Syne,sans-serif;font-size:0.75rem;font-weight:600;color:{c};">{k}</span><span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:{C["text3"]};">{v}</span></div>' for k,v,c in kpi_items])
 
@@ -328,7 +342,6 @@ def page_home():
         (C['sage'],"◌","Supabase + PostgreSQL","Production DB with Row Level Security for multi-tenant SaaS. 5 tables, 3 views, composite indexes. Designed to scale from demo to enterprise."),
     ]
 
-    # Hero section
     st.markdown(f"""
     <div style='text-align:center;padding:3rem 1rem 2rem;background:radial-gradient(ellipse at 50% 0%,rgba(196,181,253,0.08) 0%,transparent 65%);border-bottom:1px solid {C["border"]};margin-bottom:2.5rem;'>
       <div style='font-family:JetBrains Mono,monospace;font-size:0.62rem;letter-spacing:0.3em;color:{C["lavender"]};text-transform:uppercase;margin-bottom:1.2rem;opacity:0.8;'>◈ CALL CENTER INTELLIGENCE PLATFORM</div>
@@ -337,12 +350,11 @@ def page_home():
       <div style='display:flex;justify-content:center;gap:0.6rem;flex-wrap:wrap;'>{tech_pills}</div>
     </div>""", unsafe_allow_html=True)
 
-    # Feature cards
     cols = st.columns(3)
     for i, (color, icon, title, desc) in enumerate(feat_items):
         with cols[i % 3]:
             st.markdown(f"""
-            <div style='background:{C["surface"]};border:1px solid {C["border"]};border-top:2px solid {color};border-radius:8px;padding:1.4rem;margin-bottom:1rem;min-height:190px;'>
+            <div style='background:{C["surface"]};border:1px solid {C["border"]};border-top:2px solid {color};border-radius:8px;padding:1.4rem;margin-bottom:1rem;min-height:190px; box-shadow:0 4px 12px rgba(0,0,0,0.4);'>
               <div style='font-size:1.3rem;color:{color};margin-bottom:0.6rem;'>{icon}</div>
               <div style='font-family:Syne,sans-serif;font-size:0.95rem;font-weight:600;color:{C["text"]};margin-bottom:0.5rem;'>{title}</div>
               <div style='font-family:JetBrains Mono,monospace;font-size:0.67rem;color:{C["text2"]};line-height:1.7;'>{desc}</div>
@@ -350,9 +362,8 @@ def page_home():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ML specs
     st.markdown(f"""
-    <div style='background:{C["surface"]};border:1px solid {C["border"]};border-radius:8px;padding:1.8rem;margin-bottom:1.5rem;'>
+    <div style='background:{C["surface"]};border:1px solid {C["border"]};border-radius:8px;padding:1.8rem;margin-bottom:1.5rem; box-shadow:0 4px 15px rgba(0,0,0,0.4);'>
       <div style='font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.2em;color:{C["lavender"]};text-transform:uppercase;margin-bottom:1.2rem;'>ML MODEL SPECIFICATIONS</div>
       <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-bottom:1.2rem;'>{ml_grid}</div>
       <div style='font-family:JetBrains Mono,monospace;font-size:0.67rem;color:{C["text3"]};line-height:1.9;border-top:1px solid {C["border"]};padding-top:1rem;'>
@@ -363,24 +374,22 @@ def page_home():
       </div>
     </div>""", unsafe_allow_html=True)
 
-    # Dataset + KPI targets
     col_l, col_r = st.columns(2)
     with col_l:
         st.markdown(f"""
-        <div style='background:{C["surface"]};border:1px solid {C["border"]};border-radius:8px;padding:1.5rem;'>
+        <div style='background:{C["surface"]};border:1px solid {C["border"]};border-radius:8px;padding:1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.4);'>
           <div style='font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.2em;color:{C["lavender"]};text-transform:uppercase;margin-bottom:1rem;'>DATASET</div>
           {ds_rows}
         </div>""", unsafe_allow_html=True)
     with col_r:
         st.markdown(f"""
-        <div style='background:{C["surface"]};border:1px solid {C["border"]};border-radius:8px;padding:1.5rem;'>
+        <div style='background:{C["surface"]};border:1px solid {C["border"]};border-radius:8px;padding:1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.4);'>
           <div style='font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.2em;color:{C["lavender"]};text-transform:uppercase;margin-bottom:1rem;'>KPI TARGETS</div>
           {kpi_rows}
         </div>""", unsafe_allow_html=True)
 
-    # Author
     st.markdown(f"""
-    <div style='margin-top:1.5rem;padding:1.4rem 1.8rem;background:{C["surface"]};border:1px solid {C["border"]};border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;'>
+    <div style='margin-top:1.5rem;padding:1.4rem 1.8rem;background:{C["surface"]};border:1px solid {C["border"]};border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem; box-shadow:0 4px 15px rgba(0,0,0,0.4);'>
       <div>
         <div style='font-family:Syne,sans-serif;font-size:1rem;font-weight:700;color:{C["text"]};'>Diego José Palencia Robles</div>
         <div style='font-family:JetBrains Mono,monospace;font-size:0.62rem;color:{C["text3"]};margin-top:0.15rem;'>Data Science · NLP · Applied AI · Machine Learning</div>
@@ -391,7 +400,6 @@ def page_home():
         <a href="https://callcenter-analytics.streamlit.app" style='text-decoration:none;'><span style='background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.62rem;color:{C["mint"]};padding:0.3rem 0.8rem;border-radius:4px;'>Live App</span></a>
       </div>
     </div>""", unsafe_allow_html=True)
-
 
 # ── PAGE: OVERVIEW ────────────────────────────────────────────────────────────
 
@@ -452,7 +460,6 @@ def page_overview(df):
     elif av>5: alert_box(f"Abandon rate {av:.1f}% exceeds 5% target.",'warn')
     if cv<4.0: alert_box(f"CSAT {cv:.2f} below 4.0 target. Review night shift coaching.",'warn')
 
-
 # ── PAGE: TRENDS ──────────────────────────────────────────────────────────────
 
 def page_trends(df):
@@ -467,84 +474,41 @@ def page_trends(df):
         m,s=daily[col].mean(),daily[col].std()
         daily[f'{col}_anom']=(daily[col]-m).abs()>(2.0*s)
 
-def trend_chart(col, label, target, color, pct=False):
-    fig = go.Figure()
-    yv = daily[col] * 100 if pct else daily[col]
-    yr = daily[f'{col}_roll'] * 100 if pct else daily[f'{col}_roll']
-    tv = target * 100 if pct else target
+    def trend_chart(daily, col, label, target, color, pct=False):
+        fig=go.Figure()
+        yv=daily[col]*100 if pct else daily[col]; yr=daily[f'{col}_roll']*100 if pct else daily[f'{col}_roll']
+        tv=target*100 if pct else target
 
-    # Convertir color hex (#RRGGBB) → rgba con opacidad baja
-    r = int(color[1:3], 16)
-    g = int(color[3:5], 16)
-    b = int(color[5:7], 16)
-    fillcolor = f'rgba({r}, {g}, {b}, 0.06)'
+        r = int(color[1:3], 16)
+        g = int(color[3:5], 16)
+        b = int(color[5:7], 16)
+        fillcolor = f'rgba({r}, {g}, {b}, 0.06)'
 
-    fig.add_trace(go.Scatter(
-        x=daily['date'],
-        y=yv,
-        fill='tozeroy',
-        fillcolor=fillcolor,
-        line=dict(color='rgba(0,0,0,0)'),
-        showlegend=False,
-        hoverinfo='skip'
-    ))
-    fig.add_trace(go.Scatter(
-        x=daily['date'],
-        y=yv,
-        mode='lines',
-        name='Daily',
-        line=dict(color=color, width=1, dash='dot'),
-        opacity=0.4
-    ))
-    fig.add_trace(go.Scatter(
-        x=daily['date'],
-        y=yr,
-        mode='lines',
-        name=f'{window}d avg',
-        line=dict(color=color, width=2.5)
-    ))
-    fig.add_hline(
-        y=tv,
-        line_dash="dash",
-        line_color=C['rose'],
-        opacity=0.5,
-        annotation_text=f"Target {tv:.0f}{'%' if pct else ''}",
-        annotation_font_size=8,
-        annotation_font_color=C['rose'],
-        annotation_position="bottom right"
-    )
-    if show_anom:
-        an = daily[daily[f'{col}_anom']]
-        ay = an[col] * 100 if pct else an[col]
-        if len(an):
-            fig.add_trace(go.Scatter(
-                x=an['date'],
-                y=ay,
-                mode='markers',
-                name='Anomaly',
-                marker=dict(color=C['amber'], size=8, symbol='x', line=dict(color=C['amber'], width=2))
-            ))
-    ply(fig, h=300, yaxis=dict(title=label, gridcolor=C['border']))
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar':False})
+        fig.add_trace(go.Scatter(x=daily['date'],y=yv,fill='tozeroy',fillcolor=fillcolor,line=dict(color='rgba(0,0,0,0)'),showlegend=False,hoverinfo='skip'))
+        fig.add_trace(go.Scatter(x=daily['date'],y=yv,mode='lines',name='Daily',line=dict(color=color,width=1,dash='dot'),opacity=0.4))
+        fig.add_trace(go.Scatter(x=daily['date'],y=yr,mode='lines',name=f'{window}d avg',line=dict(color=color,width=2.5)))
+        fig.add_hline(y=tv,line_dash="dash",line_color=C['rose'],opacity=0.5,annotation_text=f"Target {tv:.0f}{'%' if pct else ''}",annotation_font_size=8,annotation_font_color=C['rose'],annotation_position="bottom right")
+        if show_anom:
+            an=daily[daily[f'{col}_anom']]; ay=an[col]*100 if pct else an[col]
+            if len(an): fig.add_trace(go.Scatter(x=an['date'],y=ay,mode='markers',name='Anomaly',marker=dict(color=C['amber'],size=8,symbol='x',line=dict(color=C['amber'],width=2))))
+        ply(fig,h=300,yaxis=dict(title=label,gridcolor=C['border']))
+        st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':False})
+        v=daily[col]
+        sp = f'background:{C["surface2"]};border:1px solid {C["border"]};font-family:JetBrains Mono,monospace;font-size:0.62rem;padding:0.25rem 0.7rem;border-radius:3px;'
+        stats_items = [
+            ("MIN", f"{v.min()*100:.1f}%" if pct else f"{v.min():.1f}", C["mint"]),
+            ("MAX", f"{v.max()*100:.1f}%" if pct else f"{v.max():.1f}", C["rose"]),
+            ("AVG", f"{v.mean()*100:.1f}%" if pct else f"{v.mean():.1f}", C["sky"]),
+            ("ANOMALIES", str(daily[f"{col}_anom"].sum()), C["amber"]),
+        ]
+        stats_pills = "".join([f'<span style="{sp}color:{c};">{lb}: {sv}</span>' for lb, sv, c in stats_items])
+        st.markdown(f'<div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-bottom:0.5rem;">{stats_pills}</div>', unsafe_allow_html=True)
 
-    v = daily[col]
-    sp = f'background:{C["surface2"]};border:1px solid {C["border"]};font-family:JetBrains Mono,monospace;font-size:0.62rem;padding:0.25rem 0.7rem;border-radius:3px;'
-    stats_items = [
-        ("MIN", f"{v.min()*100:.1f}%" if pct else f"{v.min():.1f}", C["mint"]),
-        ("MAX", f"{v.max()*100:.1f}%" if pct else f"{v.max():.1f}", C["rose"]),
-        ("AVG", f"{v.mean()*100:.1f}%" if pct else f"{v.mean():.1f}", C["sky"]),
-        ("ANOMALIES", str(daily[f"{col}_anom"].sum()), C["amber"]),
-    ]
-    stats_pills = "".join([f'<span style="{sp}color:{c};">{lb}: {sv}</span>' for lb, sv, c in stats_items])
-    st.markdown(f'<div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-bottom:0.5rem;">{stats_pills}</div>', unsafe_allow_html=True)
-
-
-# ← Aquí debe volver al nivel 0 (sin espacios)
-t1, t2, t3, t4 = st.tabs([" AHT ", " CSAT ", " ABANDON RATE ", " FCR "])
-with t1: trend_chart('aht_seconds', 'AHT (s)', 300, C['sky'])
-with t2: trend_chart('csat_score', 'CSAT', 4.2, C['lavender'])
-with t3: trend_chart('abandon_rate', 'Abandon %', 0.05, C['rose'], pct=True)
-with t4: trend_chart('fcr_rate', 'FCR %', 0.70, C['mint'], pct=True)
+    t1,t2,t3,t4=st.tabs([" AHT "," CSAT "," ABANDON RATE "," FCR "])
+    with t1: trend_chart(daily, 'aht_seconds','AHT (s)',300,C['sky'])
+    with t2: trend_chart(daily, 'csat_score','CSAT',4.2,C['lavender'])
+    with t3: trend_chart(daily, 'abandon_rate','Abandon %',0.05,C['rose'],pct=True)
+    with t4: trend_chart(daily, 'fcr_rate','FCR %',0.70,C['mint'],pct=True)
 
 # ── PAGE: TEAMS ───────────────────────────────────────────────────────────────
 
@@ -589,7 +553,6 @@ def page_teams(df):
     d.columns=['Team','AHT(s)','CSAT','Abandon%','FCR%','Calls','Agents','Score']
     st.dataframe(d,use_container_width=True,hide_index=True)
 
-
 # ── PAGE: AGENTS ──────────────────────────────────────────────────────────────
 
 def page_agents(df):
@@ -603,14 +566,10 @@ def page_agents(df):
     agent=agent.sort_values('score',ascending=False).reset_index(drop=True); agent.index+=1
     n=len(agent); tc=agent['tier'].value_counts()
     top_n=tc.get('TOP',0); mid_n=tc.get('MID',0); risk_n=tc.get('RISK',0)
-
-    # Tier summary — full width 3 cards
     st.markdown(f"""
     <div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.8rem;'>
       {"".join([f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-top:2px solid {color};border-radius:8px;padding:1.1rem 1.3rem;text-align:center;"><div style="font-family:JetBrains Mono,monospace;font-size:0.56rem;letter-spacing:0.16em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.4rem;">{tier} TIER</div><div style="font-family:Syne,sans-serif;font-size:2.2rem;font-weight:700;color:{color};">{count}</div><div style="font-family:JetBrains Mono,monospace;font-size:0.62rem;color:{C["text3"]};">{count/n*100:.0f}% of team · {["top quartile","middle 50%","coaching needed"][i]}</div></div>' for i,(tier,count,color) in enumerate([("TOP",top_n,C['mint']),("MID",mid_n,C['sky']),("RISK",risk_n,C['rose'])])])}
     </div>""", unsafe_allow_html=True)
-
-    # Score bar chart — full width
     section_label("COMPOSITE SCORE — ALL AGENTS")
     fig_bar=go.Figure()
     for tier in ['RISK','MID','TOP']:
@@ -624,8 +583,6 @@ def page_agents(df):
             hovertemplate='<b>%{y}</b><br>Score: %{x:.3f}<br>CSAT: %{customdata[0]:.2f}<br>FCR: %{customdata[1]:.1%}<br>AHT: %{customdata[2]:.0f}s<br>Calls: %{customdata[3]:,}<extra></extra>'))
     ply(fig_bar,h=max(320,n*18+40),xaxis=dict(title='Composite Score',range=[0,1.12],gridcolor=C['border']),yaxis=dict(gridcolor='rgba(0,0,0,0)'),barmode='stack')
     st.plotly_chart(fig_bar,use_container_width=True,config={'displayModeBar':False})
-
-    # Two charts side by side
     cl,cr=st.columns(2)
     with cl:
         section_label("CSAT vs AHT MAP")
@@ -658,16 +615,12 @@ def page_agents(df):
                 hovertemplate='%{text}<br>Exp: %{x}mo · FCR: %{y:.1f}%<extra></extra>'))
         ply(fig3,h=300,xaxis=dict(title='Experience (months)',gridcolor=C['border']),yaxis=dict(title='FCR Rate (%)',gridcolor=C['border']))
         st.plotly_chart(fig3,use_container_width=True,config={'displayModeBar':False})
-
-    # Coaching flags
     risk=agent[agent['tier']=='RISK']
     if len(risk):
         section_label("COACHING FLAGS")
         for _,row in risk.iterrows():
             team_info=f" · {row['team']}" if 'team' in agent.columns else ""
             alert_box(f"{row['agent_name']}{team_info} — Score {row['score']:.3f} · CSAT {row['avg_csat']:.2f} · Abandon {row['avg_abandon']:.1%}",'warn')
-
-    # Full table
     section_label("FULL RANKING TABLE")
     dcols=['agent_name','experience_months','avg_csat','avg_aht','avg_abandon','avg_fcr','total_calls','days_worked','tier','score']
     if 'team' in agent.columns: dcols=['agent_name','team']+dcols[1:]
@@ -677,14 +630,12 @@ def page_agents(df):
     d.rename(columns={'agent_name':'Agent','team':'Team','experience_months':'Exp(mo)','avg_csat':'CSAT','avg_aht':'AHT(s)','avg_abandon':'Abandon%','avg_fcr':'FCR%','total_calls':'Calls','days_worked':'Days','tier':'Tier','score':'Score'},inplace=True)
     st.dataframe(d,use_container_width=True)
 
-
 # ── PAGE: PREDICTOR ───────────────────────────────────────────────────────────
 
 def page_predictor(df):
     page_header("ML ABANDON RATE PREDICTOR","Random Forest · R² 0.919 · 5-fold CV · 12 engineered features")
     rf,lr,metrics=load_model()
     if rf is None: alert_box("models/regressor.pkl not found. Ensure models/ folder is in the repo.",'danger'); return
-
     section_label("MODEL METRICS")
     c1,c2,c3,c4,c5=st.columns(5)
     for col,lbl,val in [(c1,"RF R²",f"{metrics.get('rf_r2',0):.3f}"),(c2,"RF RMSE",f"{metrics.get('rf_rmse',0):.4f}"),
@@ -693,7 +644,6 @@ def page_predictor(df):
         col.metric(lbl,val)
     impr=metrics.get('baseline_rmse',1)/max(metrics.get('rf_rmse',0.01),0.001)
     alert_box(f"Random Forest achieves {impr:.1f}× RMSE improvement over naive mean baseline.",'info')
-
     cl,cr=st.columns([2,1])
     with cl:
         section_label("FEATURE IMPORTANCE")
@@ -708,18 +658,15 @@ def page_predictor(df):
     with cr:
         section_label("INTERPRETATION")
         st.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.67rem;color:{C["text2"]};line-height:1.9;"><span style="color:{C["lavender"]};">queue×monday</span> (0.363) dominates — Monday backlog amplifies abandons exponentially.<br><br><span style="color:{C["sky"]};">Day of week</span> (0.254) outperforms all agent-level features.<br><br>Implication: staff decisions must be driven by <span style="color:{C["mint"]};">queue forecasting</span>, not historical averages.</div>', unsafe_allow_html=True)
-
     st.markdown("---"); section_label("SCENARIO FORECAST SIMULATOR")
     c1,c2,c3=st.columns(3)
     with c1: dow=st.selectbox("Day of week",[0,1,2,3,4],format_func=lambda x:['Monday','Tuesday','Wednesday','Thursday','Friday'][x]); shift=st.selectbox("Shift",['morning','afternoon','night'])
     with c2: queue=st.slider("Queue depth",0,70,18); aht=st.slider("Expected AHT (s)",120,500,280)
     with c3: exp=st.slider("Avg experience (months)",1,48,18); calls=st.slider("Expected calls handled",10,90,45)
-
     le=LabelEncoder(); le.fit(['afternoon','morning','night'])
     inp=pd.DataFrame([{'day_of_week':dow,'is_monday':int(dow==0),'is_night_shift':int(shift=='night'),'shift':shift,'calls_in_queue':queue,'aht_seconds':aht,'experience_months':exp,'calls_handled':calls,'csat_score':df['csat_score'].mean(),'fcr_rate':df['fcr_rate'].mean()}])
     X=engineer_features(inp)
     rfp=float(np.clip(rf.predict(X)[0],0,1)); lrp=float(np.clip(lr.predict(X)[0],0,1)); ens=(rfp+lrp)/2
-
     st.markdown("<br>", unsafe_allow_html=True)
     fc1,fc2,fc3=st.columns(3)
     for col,lbl,val,note in [(fc1,"RANDOM FOREST",rfp,"PRIMARY MODEL"),(fc2,"LINEAR REG.",lrp,"BASELINE"),(fc3,"ENSEMBLE",ens,"RF + LR MEAN")]:
@@ -727,13 +674,11 @@ def page_predictor(df):
         color=C['rose'] if crit else (C['amber'] if over else C['mint'])
         status="CRITICAL" if crit else ("ABOVE TARGET" if over else "WITHIN TARGET")
         col.markdown(f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-top:2px solid {color};border-radius:8px;padding:1.5rem;text-align:center;"><div style="font-family:JetBrains Mono,monospace;font-size:0.56rem;letter-spacing:0.16em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.6rem;">{lbl}</div><div style="font-family:Syne,sans-serif;font-size:3rem;font-weight:800;color:{color};line-height:1;">{val*100:.1f}%</div><div style="font-family:JetBrains Mono,monospace;font-size:0.62rem;color:{color};letter-spacing:0.1em;margin-top:0.5rem;">{status}</div><div style="font-family:JetBrains Mono,monospace;font-size:0.58rem;color:{C["text3"]};margin-top:0.25rem;">target &lt; 5.0% · {note}</div></div>', unsafe_allow_html=True)
-
     st.markdown("<br>", unsafe_allow_html=True)
     day_name=['Monday','Tuesday','Wednesday','Thursday','Friday'][dow]
     if rfp>0.10: alert_box(f"CRITICAL on {day_name} {shift.upper()}. Add ~{int(np.ceil((rfp-0.05)*40))} agents to reduce queue {queue} below threshold.",'danger')
     elif rfp>0.05: alert_box(f"{rfp*100:.1f}% forecast on {day_name} {shift.upper()}. Consider +{max(1,int(np.ceil((rfp-0.05)*25)))} agent(s).",'warn')
     else: alert_box(f"{rfp*100:.1f}% forecast — within target on {day_name} {shift.upper()}. Queue {queue} is manageable.",'success')
-
     section_label("QUEUE SENSITIVITY CURVE")
     qr=np.arange(0,71,5); preds=[]
     for q in qr:
@@ -745,7 +690,6 @@ def page_predictor(df):
     fig2.add_vline(x=queue,line_dash="dot",line_color=C['amber'],opacity=0.7,annotation_text=f"Current: {queue}",annotation_font_size=8,annotation_font_color=C['amber'])
     ply(fig2,h=230,xaxis=dict(title='Queue Depth',gridcolor=C['border']),yaxis=dict(title='Predicted Abandon %',gridcolor=C['border']))
     st.plotly_chart(fig2,use_container_width=True,config={'displayModeBar':False})
-
 
 # ── MAIN ──────────────────────────────────────────────────────────────────────
 
