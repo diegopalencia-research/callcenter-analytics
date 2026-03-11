@@ -411,13 +411,13 @@ def page_trends(df):
         daily[f'{col}_roll']=daily[col].rolling(window,min_periods=1).mean()
         m,s=daily[col].mean(),daily[col].std()
         daily[f'{col}_anom']=(daily[col]-m).abs()>(2.0*s)
-        def trend_chart(col,label,target,color,pct=False):
-        fig=go.Figure()
-        yv=daily[col]*100 if pct else daily[col]
-        yr=daily[f'{col}_roll']*100 if pct else daily[f'{col}_roll']
-        tv=target*100 if pct else target
+           def trend_chart(col, label, target, color, pct=False):
+        fig = go.Figure()
+        yv = daily[col] * 100 if pct else daily[col]
+        yr = daily[f'{col}_roll'] * 100 if pct else daily[f'{col}_roll']
+        tv = target * 100 if pct else target
 
-        # ←←← ESTO ES LO QUE ARREGLA EL ERROR
+        # Convertir color hex a rgba con opacidad baja (arregla el ValueError anterior)
         r = int(color[1:3], 16)
         g = int(color[3:5], 16)
         b = int(color[5:7], 16)
@@ -432,15 +432,46 @@ def page_trends(df):
             showlegend=False,
             hoverinfo='skip'
         ))
-        fig.add_trace(go.Scatter(x=daily['date'],y=yv,mode='lines',name='Daily',line=dict(color=color,width=1,dash='dot'),opacity=0.4))
-        fig.add_trace(go.Scatter(x=daily['date'],y=yr,mode='lines',name=f'{window}d avg',line=dict(color=color,width=2.5)))
-        fig.add_hline(y=tv,line_dash="dash",line_color=C['rose'],opacity=0.5,annotation_text=f"Target {tv:.0f}{'%' if pct else ''}",annotation_font_size=8,annotation_font_color=C['rose'],annotation_position="bottom right")
+        fig.add_trace(go.Scatter(
+            x=daily['date'],
+            y=yv,
+            mode='lines',
+            name='Daily',
+            line=dict(color=color, width=1, dash='dot'),
+            opacity=0.4
+        ))
+        fig.add_trace(go.Scatter(
+            x=daily['date'],
+            y=yr,
+            mode='lines',
+            name=f'{window}d avg',
+            line=dict(color=color, width=2.5)
+        ))
+        fig.add_hline(
+            y=tv,
+            line_dash="dash",
+            line_color=C['rose'],
+            opacity=0.5,
+            annotation_text=f"Target {tv:.0f}{'%' if pct else ''}",
+            annotation_font_size=8,
+            annotation_font_color=C['rose'],
+            annotation_position="bottom right"
+        )
         if show_anom:
-            an=daily[daily[f'{col}_anom']]; ay=an[col]*100 if pct else an[col]
-            if len(an): fig.add_trace(go.Scatter(x=an['date'],y=ay,mode='markers',name='Anomaly',marker=dict(color=C['amber'],size=8,symbol='x',line=dict(color=C['amber'],width=2))))
-        ply(fig,h=300,yaxis=dict(title=label,gridcolor=C['border']))
-        st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':False})
-        v=daily[col]
+            an = daily[daily[f'{col}_anom']]
+            ay = an[col] * 100 if pct else an[col]
+            if len(an):
+                fig.add_trace(go.Scatter(
+                    x=an['date'],
+                    y=ay,
+                    mode='markers',
+                    name='Anomaly',
+                    marker=dict(color=C['amber'], size=8, symbol='x', line=dict(color=C['amber'], width=2))
+                ))
+        ply(fig, h=300, yaxis=dict(title=label, gridcolor=C['border']))
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+
+        v = daily[col]
         sp = f'background:{C["surface2"]};border:1px solid {C["border"]};font-family:JetBrains Mono,monospace;font-size:0.62rem;padding:0.25rem 0.7rem;border-radius:3px;'
         stats_items = [
             ("MIN", f"{v.min()*100:.1f}%" if pct else f"{v.min():.1f}", C["mint"]),
