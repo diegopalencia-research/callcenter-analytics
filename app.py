@@ -71,12 +71,6 @@ st.markdown(f"""
   [data-testid="metric-container"]{{background:{C['surface']} !important;border:1px solid {C['border']} !important;border-radius:8px !important;padding:1rem !important;}}
   hr{{border-color:{C['border']} !important;margin:1.4rem 0;}}
   #MainMenu,footer,header{{visibility:hidden;}}
-  /* GLOW espacial en líneas y cards */
-.plotly-graph-div .scatterlayer path { filter: drop-shadow(0 0 6px currentColor); }
-.stPlotlyChart { filter: drop-shadow(0 0 12px rgba(125,211,252,0.15)); }
-[data-testid="metric-container"] {
-    box-shadow: 0 0 15px rgba(196,181,253,0.12) !important;
-    transition: all 0.3s ease;
 }
 </style>""", unsafe_allow_html=True)
 
