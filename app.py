@@ -19,7 +19,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ── PALETTE: Deep Space Telemetry ────────────────────────────────────────────
+# ── PALETTE: Deep Space Telemetry ───────────────────────────────────────────
 C = {
     'bg':       '#010307',
     'surface':  '#0a111c',
@@ -53,83 +53,90 @@ TEAM_COLORS = {
 }
 TIER_COLORS = {'TOP': '#6ee7b7', 'MID': '#7dd3fc', 'RISK': '#fda4af'}
 
-# ── CSS ───────────────────────────────────────────────────────────────────────
-st.markdown(f"""
+def rgba(hex_c, a=0.12):
+    h = hex_c.lstrip('#')
+    r,g,b = int(h[0:2],16),int(h[2:4],16),int(h[4:6],16)
+    return f"rgba({r},{g},{b},{a})"
+
+# ── CSS: Deep Space Telemetry ────────────────────────────────────────────────
+st.markdown("""
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
-  html,body,[class*="css"]{{font-family:'Rajdhani',sans-serif;background:{C['bg']};color:{C['text']};}}
-  .stApp{{background:{C['bg']};}}
-  section[data-testid="stSidebar"]{{background:{C['surface']};border-right:1px solid {C['border']};}}
-  section[data-testid="stSidebar"] *{{font-family:'Share Tech Mono',monospace !important;font-size:0.74rem !important;}}
-  .block-container{{padding-top:1rem;padding-bottom:2rem;max-width:1300px;}}
-  .stSelectbox>div>div,.stMultiSelect>div>div{{background:{C['surface2']} !important;border:1px solid {C['border2']} !important;color:{C['text']} !important;font-family:'Share Tech Mono',monospace !important;font-size:0.76rem !important;border-radius:3px !important;}}
-  .stTabs [data-baseweb="tab-list"]{{background:{C['surface']};border-bottom:1px solid {C['border']};gap:0;}}
-  .stTabs [data-baseweb="tab"]{{font-family:'Share Tech Mono',monospace;font-size:0.68rem;letter-spacing:0.12em;color:{C['text2']};padding:0.6rem 1.4rem;background:transparent;text-transform:uppercase;}}
-  .stTabs [aria-selected="true"]{{color:{C['green']} !important;border-bottom:2px solid {C['green']} !important;background:transparent !important;}}
-  .stDataFrame{{border:1px solid {C['border']} !important;border-radius:3px;}}
-  .stDataFrame th{{background:{C['surface2']} !important;font-family:'Share Tech Mono',monospace !important;font-size:0.66rem !important;color:{C['text3']} !important;letter-spacing:0.1em;text-transform:uppercase;}}
-  .stDataFrame td{{font-family:'Share Tech Mono',monospace !important;font-size:0.74rem !important;}}
-  [data-testid="metric-container"]{{background:{C['surface']} !important;border:1px solid {C['border']} !important;border-radius:3px !important;padding:1rem !important;}}
-  [data-testid="stMetricValue"]{{font-family:'Rajdhani',sans-serif !important;font-weight:600 !important;}}
-  hr{{border-color:{C['border']} !important;margin:1.4rem 0;}}
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+  html,body,[class*="css"]{{font-family:'Syne',sans-serif;background:{bg};color:{text};}}
+  .stApp{{background:{bg};background-image:radial-gradient(circle at 10% 20%,{glow} 0%,transparent 25%),radial-gradient(circle at 90% 80%,{glow} 0%,transparent 30%);}}
+  section[data-testid="stSidebar"]{{background:{surface};border-right:1px solid {border};box-shadow:2px 0 15px rgba(0,0,0,0.6);}}
+  section[data-testid="stSidebar"] *{{font-family:'JetBrains Mono',monospace !important;font-size:0.78rem !important;}}
+  .block-container{{padding-top:1.2rem;padding-bottom:3rem;max-width:1380px;}}
+  .stSelectbox>div>div,.stMultiSelect>div>div{{background:{surface2} !important;border:1px solid {border2} !important;color:{text} !important;font-family:'JetBrains Mono',monospace !important;font-size:0.78rem !important;border-radius:6px !important;}}
+  .stTabs [data-baseweb="tab-list"]{{background:{surface};border-bottom:1px solid {border2};gap:0;}}
+  .stTabs [data-baseweb="tab"]{{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.12em;color:{text2};padding:0.7rem 1.6rem;background:transparent;text-transform:uppercase;transition:all 0.2s;}}
+  .stTabs [aria-selected="true"]{{color:{sky} !important;border-bottom:2px solid {sky} !important;text-shadow:0 0 8px {glow_line};}}
+  [data-testid="metric-container"]{{background:{surface2} !important;border:1px solid {border};border-top:2px solid {lavender};border-radius:8px;padding:1.1rem !important;box-shadow:0 4px 15px rgba(0,0,0,0.4),inset 0 0 8px {glow};transition:all 0.25s;}}
+  [data-testid="metric-container"]:hover{{box-shadow:0 6px 20px rgba(165,180,252,0.15),inset 0 0 12px {glow};}}
+  .stDataFrame{{border:1px solid {border} !important;border-radius:6px;}}
+  .stDataFrame th{{background:{surface2} !important;font-family:'JetBrains Mono',monospace !important;font-size:0.68rem !important;color:{text3} !important;letter-spacing:0.08em;text-transform:uppercase;}}
+  .stDataFrame td{{font-family:'JetBrains Mono',monospace !important;font-size:0.78rem !important;}}
+  [data-testid="stMetricValue"]{{font-family:'Syne',sans-serif !important;font-weight:700 !important;}}
+  hr{{border-color:{border2} !important;margin:1.8rem 0;}}
+  .stPlotlyChart{{filter:drop-shadow(0 0 10px rgba(125,211,252,0.10));}}
   #MainMenu,footer,header{{visibility:hidden;}}
-  div[data-testid="stCheckbox"] label span{{font-family:'Share Tech Mono',monospace !important;font-size:0.74rem !important;}}
-  /* Lock sidebar — prevent accidental collapse */
   [data-testid="stSidebarCollapsedControl"]{{display:none !important;}}
   button[kind="header"]{{display:none !important;}}
-</style>""", unsafe_allow_html=True)
+  div[data-testid="stCheckbox"] label span{{font-family:'JetBrains Mono',monospace !important;font-size:0.76rem !important;}}
+</style>
+""".format(**C), unsafe_allow_html=True)
 
 
 # ── UI COMPONENTS ─────────────────────────────────────────────────────────────
 
 def page_header(title, subtitle=None, tag=None):
-    tag_html = f'<span style="background:{C["surface3"]};border:1px solid {C["border2"]};font-family:Share Tech Mono,monospace;font-size:0.58rem;letter-spacing:0.1em;color:{C["green"]};padding:0.15rem 0.55rem;border-radius:2px;margin-left:0.8rem;vertical-align:middle;">{tag}</span>' if tag else ''
-    sub_html = f'<div style="font-family:Share Tech Mono,monospace;font-size:0.75rem;color:{C["text2"]};margin-top:0.35rem;letter-spacing:0.04em;">{subtitle}</div>' if subtitle else ''
+    tag_html = f'<span style="background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.1em;color:{C["mint"]};padding:0.15rem 0.55rem;border-radius:2px;margin-left:0.8rem;vertical-align:middle;">{tag}</span>' if tag else ''
+    sub_html = f'<div style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:{C["text2"]};margin-top:0.35rem;letter-spacing:0.04em;">{subtitle}</div>' if subtitle else ''
     st.markdown(f"""
     <div style='border-bottom:1px solid {C["border"]};padding-bottom:1rem;margin-bottom:1.6rem;'>
-      <div style='font-family:Share Tech Mono,monospace;font-size:0.56rem;letter-spacing:0.26em;color:{C["green"]};text-transform:uppercase;margin-bottom:0.35rem;opacity:0.7;'>SYS // CC-INTELLIGENCE · PALENCIA.RESEARCH · 2026</div>
-      <div style='font-family:Rajdhani,sans-serif;font-size:1.9rem;font-weight:700;color:{C["text"]};letter-spacing:0.04em;text-transform:uppercase;line-height:1;'>{title}{tag_html}</div>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.56rem;letter-spacing:0.26em;color:{C["mint"]};text-transform:uppercase;margin-bottom:0.35rem;opacity:0.7;'>CC-INTELLIGENCE · PALENCIA RESEARCH · 2026</div>
+      <div style='font-family:Syne,sans-serif;font-size:1.9rem;font-weight:700;color:{C["text"]};letter-spacing:0.04em;text-transform:uppercase;line-height:1;'>{title}{tag_html}</div>
       {sub_html}
     </div>""", unsafe_allow_html=True)
 
 def section_label(text):
-    st.markdown(f'<div style="font-family:Share Tech Mono,monospace;font-size:0.6rem;letter-spacing:0.2em;color:{C["text3"]};text-transform:uppercase;border-left:2px solid {C["green"]};padding-left:0.75rem;margin:1.8rem 0 0.9rem;">{text}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.6rem;letter-spacing:0.2em;color:{C["text3"]};text-transform:uppercase;border-left:2px solid {C["mint"]};padding-left:0.75rem;margin:1.8rem 0 0.9rem;">{text}</div>', unsafe_allow_html=True)
 
 def kpi_card(col, label, value, delta_pct, target=None, invert=False):
     is_good = (delta_pct < 0) if invert else (delta_pct > 0)
     arrow = "▲" if delta_pct > 0 else "▼"
-    dc = C['lime'] if is_good else C['red']
-    bc = C['green'] if is_good else C['amber']
-    tgt = f'<div style="font-family:Share Tech Mono,monospace;font-size:0.58rem;color:{C["text3"]};margin-top:0.3rem;">TGT {target}</div>' if target else ''
+    dc = C['mint'] if is_good else C['rose']
+    bc = C['mint'] if is_good else C['amber']
+    tgt = f'<div style="font-family:JetBrains Mono,monospace;font-size:0.58rem;color:{C["text3"]};margin-top:0.3rem;">TGT {target}</div>' if target else ''
     col.markdown(f"""
     <div style='background:{C["surface"]};border:1px solid {C["border"]};border-top:1px solid {bc};border-radius:3px;padding:1.1rem 1.2rem;position:relative;overflow:hidden;'>
       <div style='position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,{bc}00,{bc},{bc}00);'></div>
-      <div style='font-family:Share Tech Mono,monospace;font-size:0.54rem;letter-spacing:0.18em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.5rem;'>{label}</div>
-      <div style='font-family:Rajdhani,sans-serif;font-size:2.4rem;font-weight:700;color:{C["text"]};line-height:1;letter-spacing:0.02em;'>{value}</div>
-      <div style='font-family:Share Tech Mono,monospace;font-size:0.62rem;color:{dc};margin-top:0.4rem;'>{arrow} {abs(delta_pct):.1f}% vs prior</div>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.54rem;letter-spacing:0.18em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.5rem;'>{label}</div>
+      <div style='font-family:Syne,sans-serif;font-size:2.4rem;font-weight:700;color:{C["text"]};line-height:1;letter-spacing:0.02em;'>{value}</div>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.62rem;color:{dc};margin-top:0.4rem;'>{arrow} {abs(delta_pct):.1f}% vs prior</div>
       {tgt}
     </div>""", unsafe_allow_html=True)
 
 def alert_box(text, level='warn'):
     cfg = {
         'warn':    (C['amber'], rgba(C['amber'],0.05), '⚡'),
-        'danger':  (C['red'],   rgba(C['red'],0.05),   '■ CRIT'),
-        'info':    (C['cyan'],  rgba(C['cyan'],0.05),  '◈ SYS'),
-        'success': (C['lime'],  rgba(C['lime'],0.05),  '✓ OK'),
+        'danger':  (C['rose'],   rgba(C['rose'],0.05),   '■ CRIT'),
+        'info':    (C['sky'],  rgba(C['sky'],0.05),  '◈ SYS'),
+        'success': (C['mint'],  rgba(C['mint'],0.05),  '✓ OK'),
     }
     color,bg,icon = cfg.get(level, cfg['warn'])
-    st.markdown(f'<div style="background:{bg};border-left:2px solid {color};padding:0.65rem 1rem;margin:0.5rem 0;border-radius:0 3px 3px 0;"><span style="font-family:Share Tech Mono,monospace;font-size:0.68rem;color:{color};letter-spacing:0.08em;">{icon}</span><span style="font-family:Share Tech Mono,monospace;font-size:0.72rem;color:{C["text2"]};margin-left:0.6rem;">{text}</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:{bg};border-left:2px solid {color};padding:0.65rem 1rem;margin:0.5rem 0;border-radius:0 3px 3px 0;"><span style="font-family:JetBrains Mono,monospace;font-size:0.68rem;color:{color};letter-spacing:0.08em;">{icon}</span><span style="font-family:JetBrains Mono,monospace;font-size:0.72rem;color:{C["text2"]};margin-left:0.6rem;">{text}</span></div>', unsafe_allow_html=True)
 
 # Plotly base theme
 PL = dict(
     paper_bgcolor='rgba(0,0,0,0)',
     plot_bgcolor=C['surface'],
-    font=dict(family='Share Tech Mono', color=C['text2'], size=10),
+    font=dict(family='JetBrains Mono', color=C['text2'], size=10),
     xaxis=dict(gridcolor=C['border'], linecolor=C['border2'], tickfont=dict(size=9), zeroline=False),
     yaxis=dict(gridcolor=C['border'], linecolor=C['border2'], tickfont=dict(size=9), zeroline=False),
     margin=dict(l=8,r=8,t=28,b=8),
     legend=dict(bgcolor='rgba(0,0,0,0)', bordercolor=C['border'], font=dict(size=9)),
-    hoverlabel=dict(bgcolor=C['surface3'], bordercolor=C['border2'], font=dict(family='Share Tech Mono', size=10)),
+    hoverlabel=dict(bgcolor=C['surface3'], bordercolor=C['border2'], font=dict(family='JetBrains Mono', size=10)),
 )
 def ply(fig, h=280, **kw):
     fig.update_layout(**{**PL,'height':h,**kw}); return fig
@@ -218,16 +225,16 @@ def norm_score(s, invert=False):
 def render_sidebar(df, source, err):
     st.sidebar.markdown(f"""
     <div style='padding:0.8rem 0 1.2rem;border-bottom:1px solid {C["border"]};margin-bottom:1.1rem;'>
-      <div style='font-family:Share Tech Mono,monospace;font-size:0.5rem;letter-spacing:0.28em;color:{C["green"]};text-transform:uppercase;margin-bottom:0.3rem;opacity:0.7;'>◈ MISSION CONTROL</div>
-      <div style='font-family:Rajdhani,sans-serif;font-size:1.05rem;font-weight:700;color:{C["text"]};text-transform:uppercase;letter-spacing:0.06em;'>PALENCIA RESEARCH</div>
-      <div style='font-family:Share Tech Mono,monospace;font-size:0.6rem;color:{C["text3"]};margin-top:0.15rem;'>CC INTELLIGENCE · v5.0</div>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.5rem;letter-spacing:0.28em;color:{C["mint"]};text-transform:uppercase;margin-bottom:0.3rem;opacity:0.7;'>◈ CC-INTELLIGENCE</div>
+      <div style='font-family:Syne,sans-serif;font-size:1.05rem;font-weight:700;color:{C["text"]};text-transform:uppercase;letter-spacing:0.06em;'>PALENCIA RESEARCH</div>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.6rem;color:{C["text3"]};margin-top:0.15rem;'>CC Intelligence · v5.0</div>
     </div>""", unsafe_allow_html=True)
 
-    st.sidebar.markdown(f'<div style="font-family:Share Tech Mono;font-size:0.54rem;letter-spacing:0.18em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.5rem;">NAV</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.54rem;letter-spacing:0.18em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.5rem;">NAV</div>', unsafe_allow_html=True)
     page = st.sidebar.radio("nav", label_visibility="collapsed",
                              options=["HOME","OVERVIEW","TRENDS","TEAMS","AGENTS","PREDICTOR"])
     st.sidebar.markdown("---")
-    st.sidebar.markdown(f'<div style="font-family:Share Tech Mono;font-size:0.54rem;letter-spacing:0.18em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.5rem;">FILTERS</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.54rem;letter-spacing:0.18em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.5rem;">FILTERS</div>', unsafe_allow_html=True)
 
     min_d=df['date'].min().date(); max_d=df['date'].max().date()
     date_range=st.sidebar.date_input("Date range",value=(min_d,max_d),min_value=min_d,max_value=max_d)
@@ -241,8 +248,8 @@ def render_sidebar(df, source, err):
         years=st.sidebar.multiselect("Year",options=avail,default=avail)
 
     st.sidebar.markdown("---")
-    sc,sl = (C['lime'],"● SUPABASE LIVE") if source=="supabase" else (C['amber'],"○ CSV FALLBACK")
-    st.sidebar.markdown(f'<div style="font-family:Share Tech Mono,monospace;font-size:0.6rem;color:{sc};letter-spacing:0.08em;margin-bottom:0.5rem;">{sl}</div>', unsafe_allow_html=True)
+    sc,sl = (C['mint'],"● SUPABASE LIVE") if source=="supabase" else (C['amber'],"○ CSV FALLBACK")
+    st.sidebar.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.6rem;color:{sc};letter-spacing:0.08em;margin-bottom:0.5rem;">{sl}</div>', unsafe_allow_html=True)
 
     if source=="csv" and err:
         with st.sidebar.expander("⚡ Why CSV? (debug)"):
@@ -261,7 +268,7 @@ SUPABASE_URL = "https://pbdtojwwhtqojqhrwjia.supabase.co"
 SUPABASE_KEY = "eyJ..."
 ```""")
 
-    st.sidebar.markdown(f'<div style="font-family:Share Tech Mono,monospace;font-size:0.6rem;color:{C["text3"]};line-height:2;">ROWS&nbsp;&nbsp;&nbsp;{len(df):,}<br>AGENTS&nbsp;{df["agent_id"].nunique()}<br>PERIOD&nbsp;{df["date"].min().strftime("%b %Y")} → {df["date"].max().strftime("%b %Y")}<br>MODEL&nbsp;&nbsp;RF R² 0.919</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.6rem;color:{C["text3"]};line-height:2;">ROWS&nbsp;&nbsp;&nbsp;{len(df):,}<br>AGENTS&nbsp;{df["agent_id"].nunique()}<br>PERIOD&nbsp;{df["date"].min().strftime("%b %Y")} → {df["date"].max().strftime("%b %Y")}<br>MODEL&nbsp;&nbsp;RF R² 0.919</div>', unsafe_allow_html=True)
     return page, date_range, shifts, teams, agents, years
 
 def apply_filters(df, date_range, shifts, teams, agents, years):
@@ -278,36 +285,36 @@ def apply_filters(df, date_range, shifts, teams, agents, years):
 
 def page_home():
     tech_stack = ["Python 3.12","Streamlit","Supabase","PostgreSQL","Plotly","scikit-learn","Random Forest","Pandas","NumPy"]
-    ps = f'background:{C["surface3"]};border:1px solid {C["border2"]};font-family:Share Tech Mono,monospace;font-size:0.58rem;letter-spacing:0.06em;color:{C["text2"]};padding:0.25rem 0.7rem;border-radius:2px;'
+    ps = f'background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.58rem;letter-spacing:0.06em;color:{C["text2"]};padding:0.25rem 0.7rem;border-radius:2px;'
     tech_pills = "".join([f'<span style="{ps}">{t}</span>' for t in tech_stack])
 
-    ml_items = [("RF R²","0.919",C['green']),("CV R² 5-fold","0.908",C['cyan']),("RMSE Improvement","3.5×",C['lime']),("Features","12",C['amber'])]
-    ml_grid = "".join([f'<div><div style="font-family:Share Tech Mono,monospace;font-size:0.52rem;color:{C["text3"]};letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.25rem;">{l}</div><div style="font-family:Rajdhani,sans-serif;font-size:1.6rem;font-weight:700;color:{c};letter-spacing:0.02em;">{v}</div></div>' for l,v,c in ml_items])
+    ml_items = [("RF R²","0.919",C['mint']),("CV R² 5-fold","0.908",C['sky']),("RMSE Improvement","3.5×",C['mint']),("Features","12",C['amber'])]
+    ml_grid = "".join([f'<div><div style="font-family:JetBrains Mono,monospace;font-size:0.52rem;color:{C["text3"]};letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.25rem;">{l}</div><div style="font-family:Syne,sans-serif;font-size:1.6rem;font-weight:700;color:{c};letter-spacing:0.02em;">{v}</div></div>' for l,v,c in ml_items])
 
     ds_items = [("Rows","6,829"),("Agents","25"),("Period","Jan 2025 → Mar 2026"),("Teams","5"),("Grain","Agent × Day"),("KPIs","8")]
     row_style = f'display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid {C["border"]};'
-    ds_rows = "".join([f'<div style="{row_style}"><span style="font-family:Share Tech Mono,monospace;font-size:0.64rem;color:{C["text3"]};">{k}</span><span style="font-family:Share Tech Mono,monospace;font-size:0.64rem;color:{C["text"]};font-weight:500;">{v}</span></div>' for k,v in ds_items])
+    ds_rows = "".join([f'<div style="{row_style}"><span style="font-family:JetBrains Mono,monospace;font-size:0.64rem;color:{C["text3"]};">{k}</span><span style="font-family:JetBrains Mono,monospace;font-size:0.64rem;color:{C["text"]};font-weight:500;">{v}</span></div>' for k,v in ds_items])
 
-    kpi_items = [("AHT","< 300s",C['cyan']),("CSAT","> 4.20 / 5.0",C['green']),("Abandon Rate","< 5.0%",C['red']),("FCR","> 70%",C['lime']),("Escalation","< 8%",C['amber']),("Transfer","< 10%",C['purple'])]
-    kpi_rows = "".join([f'<div style="{row_style}"><span style="font-family:Rajdhani,sans-serif;font-size:0.85rem;font-weight:600;color:{c};letter-spacing:0.04em;">{k}</span><span style="font-family:Share Tech Mono,monospace;font-size:0.62rem;color:{C["text3"]};">{v}</span></div>' for k,v,c in kpi_items])
+    kpi_items = [("AHT","< 300s",C['sky']),("CSAT","> 4.20 / 5.0",C['mint']),("Abandon Rate","< 5.0%",C['rose']),("FCR","> 70%",C['mint']),("Escalation","< 8%",C['amber']),("Transfer","< 10%",C['lavender'])]
+    kpi_rows = "".join([f'<div style="{row_style}"><span style="font-family:Syne,sans-serif;font-size:0.85rem;font-weight:600;color:{c};letter-spacing:0.04em;">{k}</span><span style="font-family:JetBrains Mono,monospace;font-size:0.62rem;color:{C["text3"]};">{v}</span></div>' for k,v,c in kpi_items])
 
     feat_items = [
-        (C['green'],  "◈","Executive Overview",   "4–6 live KPI cards with period-over-period deltas. Weekly call volume vs abandon rate, shift breakdown, day×shift heatmap."),
-        (C['cyan'],   "◎","Temporal Analysis",     "Daily time series for AHT, CSAT, Abandon Rate and FCR. Configurable rolling averages. Statistical anomaly detection with z-score flagging."),
-        (C['lime'],   "◍","Team Intelligence",     "Comparative KPI radar across 5 teams. Monthly CSAT trends by team. Composite ranking. Identifies improving vs declining units."),
-        (C['red'],    "◉","Agent Performance",     "Composite score: CSAT 30% + FCR 30% + AHT 20% + Abandon 20%. TOP/MID/RISK tier classification with automatic coaching flags."),
+        (C['mint'],  "◈","Executive Overview",   "4–6 live KPI cards with period-over-period deltas. Weekly call volume vs abandon rate, shift breakdown, day×shift heatmap."),
+        (C['sky'],   "◎","Temporal Analysis",     "Daily time series for AHT, CSAT, Abandon Rate and FCR. Configurable rolling averages. Statistical anomaly detection with z-score flagging."),
+        (C['mint'],   "◍","Team Intelligence",     "Comparative KPI radar across 5 teams. Monthly CSAT trends by team. Composite ranking. Identifies improving vs declining units."),
+        (C['rose'],    "◉","Agent Performance",     "Composite score: CSAT 30% + FCR 30% + AHT 20% + Abandon 20%. TOP/MID/RISK tier classification with automatic coaching flags."),
         (C['amber'],  "◊","ML Predictor",          "Random Forest (R² 0.919) predicts abandon rate from 12 engineered features. Queue sensitivity curve. Staffing recommendations."),
-        (C['purple'], "◌","Supabase + PostgreSQL", "Production DB with Row Level Security. 5 tables, 3 views, composite indexes. Pre-configured for multi-tenant SaaS scale."),
+        (C['lavender'], "◌","Supabase + PostgreSQL", "Production DB with Row Level Security. 5 tables, 3 views, composite indexes. Pre-configured for multi-tenant SaaS scale."),
     ]
 
     # ── Hero ──
     st.markdown(f"""
-    <div style='padding:3rem 1rem 2.5rem;background:radial-gradient(ellipse at 50% -20%,{rgba(C["green"],0.07)} 0%,transparent 60%);border-bottom:1px solid {C["border"]};margin-bottom:2.5rem;position:relative;'>
-      <div style='position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,{C["green"]},transparent);opacity:0.4;'></div>
+    <div style='padding:3rem 1rem 2.5rem;background:radial-gradient(ellipse at 50% -20%,{rgba(C["mint"],0.07)} 0%,transparent 60%);border-bottom:1px solid {C["border"]};margin-bottom:2.5rem;position:relative;'>
+      <div style='position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,{C["mint"]},transparent);opacity:0.4;'></div>
       <div style='text-align:center;'>
-        <div style='font-family:Share Tech Mono,monospace;font-size:0.6rem;letter-spacing:0.32em;color:{C["green"]};text-transform:uppercase;margin-bottom:1.2rem;opacity:0.8;'>◈ CALL CENTER INTELLIGENCE PLATFORM · MISSION CONTROL</div>
-        <div style='font-family:Rajdhani,sans-serif;font-size:3.6rem;font-weight:700;color:{C["text"]};letter-spacing:0.06em;text-transform:uppercase;line-height:1;margin-bottom:0.6rem;'>OPERATIONAL<br><span style='color:{C["green"]};text-shadow:0 0 30px {rgba(C["green"],0.5)};'>ANALYTICS</span></div>
-        <div style='font-family:Share Tech Mono,monospace;font-size:0.78rem;color:{C["text2"]};max-width:560px;margin:1rem auto 1.8rem;line-height:1.8;letter-spacing:0.03em;'>Production-grade BI dashboard for call center operations — real-time KPI telemetry, agent performance ranking, and ML-powered abandon rate prediction.</div>
+        <div style='font-family:JetBrains Mono,monospace;font-size:0.6rem;letter-spacing:0.32em;color:{C["mint"]};text-transform:uppercase;margin-bottom:1.2rem;opacity:0.8;'>◈ CALL CENTER INTELLIGENCE PLATFORM · MISSION CONTROL</div>
+        <div style='font-family:Syne,sans-serif;font-size:3.6rem;font-weight:700;color:{C["text"]};letter-spacing:0.06em;text-transform:uppercase;line-height:1;margin-bottom:0.6rem;'>OPERATIONAL<br><span style='color:{C["mint"]};text-shadow:0 0 30px {rgba(C["mint"],0.5)};'>ANALYTICS</span></div>
+        <div style='font-family:JetBrains Mono,monospace;font-size:0.78rem;color:{C["text2"]};max-width:560px;margin:1rem auto 1.8rem;line-height:1.8;letter-spacing:0.03em;'>Production-grade BI dashboard for call center operations — real-time KPI telemetry, agent performance ranking, and ML-powered abandon rate prediction.</div>
         <div style='display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;'>{tech_pills}</div>
       </div>
     </div>""", unsafe_allow_html=True)
@@ -319,9 +326,9 @@ def page_home():
             st.markdown(f"""
             <div style='background:{C["surface"]};border:1px solid {C["border"]};border-top:1px solid {color};border-radius:3px;padding:1.3rem;margin-bottom:1rem;min-height:175px;position:relative;overflow:hidden;'>
               <div style='position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,{color}00,{color},{color}00);'></div>
-              <div style='font-family:Share Tech Mono,monospace;font-size:1.1rem;color:{color};margin-bottom:0.6rem;'>{icon}</div>
-              <div style='font-family:Rajdhani,sans-serif;font-size:1rem;font-weight:600;color:{C["text"]};margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.04em;'>{title}</div>
-              <div style='font-family:Share Tech Mono,monospace;font-size:0.65rem;color:{C["text2"]};line-height:1.7;'>{desc}</div>
+              <div style='font-family:JetBrains Mono,monospace;font-size:1.1rem;color:{color};margin-bottom:0.6rem;'>{icon}</div>
+              <div style='font-family:Syne,sans-serif;font-size:1rem;font-weight:600;color:{C["text"]};margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.04em;'>{title}</div>
+              <div style='font-family:JetBrains Mono,monospace;font-size:0.65rem;color:{C["text2"]};line-height:1.7;'>{desc}</div>
             </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -329,32 +336,32 @@ def page_home():
     # ── ML specs ──
     st.markdown(f"""
     <div style='background:{C["surface"]};border:1px solid {C["border"]};border-radius:3px;padding:1.6rem;margin-bottom:1.2rem;position:relative;overflow:hidden;'>
-      <div style='position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,{C["green"]}00,{C["green"]},{C["green"]}00);opacity:0.5;'></div>
-      <div style='font-family:Share Tech Mono,monospace;font-size:0.56rem;letter-spacing:0.22em;color:{C["green"]};text-transform:uppercase;margin-bottom:1.2rem;'>ML MODEL SPECIFICATIONS // RANDOM FOREST REGRESSOR</div>
+      <div style='position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,{C["mint"]}00,{C["mint"]},{C["mint"]}00);opacity:0.5;'></div>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.56rem;letter-spacing:0.22em;color:{C["mint"]};text-transform:uppercase;margin-bottom:1.2rem;'>ML MODEL SPECIFICATIONS // RANDOM FOREST REGRESSOR</div>
       <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-bottom:1.2rem;'>{ml_grid}</div>
-      <div style='font-family:Share Tech Mono,monospace;font-size:0.65rem;color:{C["text3"]};line-height:2;border-top:1px solid {C["border"]};padding-top:1rem;'>
-        TOP FEATURES → <span style='color:{C["green"]};'>queue×monday [0.363]</span> · <span style='color:{C["cyan"]};'>day_of_week [0.254]</span> · <span style='color:{C["lime"]};'>calls_in_queue [0.243]</span> · <span style='color:{C["amber"]};'>is_monday [0.133]</span>
+      <div style='font-family:JetBrains Mono,monospace;font-size:0.65rem;color:{C["text3"]};line-height:2;border-top:1px solid {C["border"]};padding-top:1rem;'>
+        TOP FEATURES → <span style='color:{C["mint"]};'>queue×monday [0.363]</span> · <span style='color:{C["sky"]};'>day_of_week [0.254]</span> · <span style='color:{C["mint"]};'>calls_in_queue [0.243]</span> · <span style='color:{C["amber"]};'>is_monday [0.133]</span>
       </div>
     </div>""", unsafe_allow_html=True)
 
     # ── Dataset + KPI targets ──
     col_l,col_r = st.columns(2)
     with col_l:
-        st.markdown(f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-radius:3px;padding:1.4rem;"><div style="font-family:Share Tech Mono,monospace;font-size:0.56rem;letter-spacing:0.22em;color:{C["green"]};text-transform:uppercase;margin-bottom:1rem;">DATASET SPECS</div>{ds_rows}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-radius:3px;padding:1.4rem;"><div style="font-family:JetBrains Mono,monospace;font-size:0.56rem;letter-spacing:0.22em;color:{C["mint"]};text-transform:uppercase;margin-bottom:1rem;">DATASET SPECS</div>{ds_rows}</div>', unsafe_allow_html=True)
     with col_r:
-        st.markdown(f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-radius:3px;padding:1.4rem;"><div style="font-family:Share Tech Mono,monospace;font-size:0.56rem;letter-spacing:0.22em;color:{C["green"]};text-transform:uppercase;margin-bottom:1rem;">KPI TARGETS</div>{kpi_rows}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-radius:3px;padding:1.4rem;"><div style="font-family:JetBrains Mono,monospace;font-size:0.56rem;letter-spacing:0.22em;color:{C["mint"]};text-transform:uppercase;margin-bottom:1rem;">KPI TARGETS</div>{kpi_rows}</div>', unsafe_allow_html=True)
 
     # ── Author ──
     st.markdown(f"""
     <div style='margin-top:1.2rem;padding:1.3rem 1.6rem;background:{C["surface"]};border:1px solid {C["border"]};border-radius:3px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;'>
       <div>
-        <div style='font-family:Rajdhani,sans-serif;font-size:1.05rem;font-weight:700;color:{C["text"]};text-transform:uppercase;letter-spacing:0.06em;'>Diego José Palencia Robles</div>
-        <div style='font-family:Share Tech Mono,monospace;font-size:0.6rem;color:{C["text3"]};margin-top:0.15rem;letter-spacing:0.04em;'>DATA SCIENCE · NLP · APPLIED AI · MACHINE LEARNING</div>
+        <div style='font-family:Syne,sans-serif;font-size:1.05rem;font-weight:700;color:{C["text"]};text-transform:uppercase;letter-spacing:0.06em;'>Diego José Palencia Robles</div>
+        <div style='font-family:JetBrains Mono,monospace;font-size:0.6rem;color:{C["text3"]};margin-top:0.15rem;letter-spacing:0.04em;'>DATA SCIENCE · NLP · APPLIED AI · MACHINE LEARNING</div>
       </div>
       <div style='display:flex;gap:0.6rem;'>
-        <a href="https://github.com/diegopalencia-research" style='text-decoration:none;'><span style='background:{C["surface3"]};border:1px solid {C["border2"]};font-family:Share Tech Mono,monospace;font-size:0.6rem;color:{C["green"]};padding:0.28rem 0.75rem;border-radius:2px;'>GITHUB</span></a>
-        <a href="https://linkedin.com/in/diego-jose-palencia-robles" style='text-decoration:none;'><span style='background:{C["surface3"]};border:1px solid {C["border2"]};font-family:Share Tech Mono,monospace;font-size:0.6rem;color:{C["cyan"]};padding:0.28rem 0.75rem;border-radius:2px;'>LINKEDIN</span></a>
-        <a href="https://callcenter-analytics.streamlit.app" style='text-decoration:none;'><span style='background:{C["surface3"]};border:1px solid {C["border2"]};font-family:Share Tech Mono,monospace;font-size:0.6rem;color:{C["lime"]};padding:0.28rem 0.75rem;border-radius:2px;'>LIVE APP</span></a>
+        <a href="https://github.com/diegopalencia-research" style='text-decoration:none;'><span style='background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.6rem;color:{C["mint"]};padding:0.28rem 0.75rem;border-radius:2px;'>GITHUB</span></a>
+        <a href="https://linkedin.com/in/diego-jose-palencia-robles" style='text-decoration:none;'><span style='background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.6rem;color:{C["sky"]};padding:0.28rem 0.75rem;border-radius:2px;'>LINKEDIN</span></a>
+        <a href="https://callcenter-analytics.streamlit.app" style='text-decoration:none;'><span style='background:{C["surface3"]};border:1px solid {C["border2"]};font-family:JetBrains Mono,monospace;font-size:0.6rem;color:{C["mint"]};padding:0.28rem 0.75rem;border-radius:2px;'>LIVE APP</span></a>
       </div>
     </div>""", unsafe_allow_html=True)
 
@@ -385,8 +392,8 @@ def page_overview(df):
         daily['week']=daily['date'].dt.to_period('W').apply(lambda x:x.start_time)
         wk=daily.groupby('week').agg(calls=('calls','sum'),abandon=('abandon','mean')).reset_index()
         fig=make_subplots(specs=[[{"secondary_y":True}]])
-        fig.add_trace(go.Bar(x=wk['week'],y=wk['calls'],name='CALLS',marker_color=C['cyan'],opacity=0.5,marker_line_width=0),secondary_y=False)
-        fig.add_trace(go.Scatter(x=wk['week'],y=wk['abandon']*100,name='ABANDON %',line=dict(color=C['green'],width=2),mode='lines+markers',marker=dict(size=4,color=C['green'])),secondary_y=True)
+        fig.add_trace(go.Bar(x=wk['week'],y=wk['calls'],name='CALLS',marker_color=C['sky'],opacity=0.5,marker_line_width=0),secondary_y=False)
+        fig.add_trace(go.Scatter(x=wk['week'],y=wk['abandon']*100,name='ABANDON %',line=dict(color=C['mint'],width=2),mode='lines+markers',marker=dict(size=4,color=C['mint'])),secondary_y=True)
         fig.add_hline(y=5.0,line_dash="dash",line_color=C['amber'],opacity=0.5,secondary_y=True,annotation_text="5% TGT",annotation_font_size=8,annotation_font_color=C['amber'])
         fig.update_yaxes(title_text="CALLS",secondary_y=False,gridcolor=C['border'])
         fig.update_yaxes(title_text="ABANDON %",secondary_y=True,gridcolor='rgba(0,0,0,0)')
@@ -394,12 +401,12 @@ def page_overview(df):
     with cr:
         section_label("SHIFT BREAKDOWN")
         sdf=df.groupby('shift').agg(csat=('csat_score','mean'),fcr=('fcr_rate','mean'),abandon=('abandon_rate','mean')).reset_index()
-        sc={'morning':C['green'],'afternoon':C['cyan'],'night':C['purple']}
+        sc={'morning':C['mint'],'afternoon':C['sky'],'night':C['lavender']}
         fig2=go.Figure()
         for _,row in sdf.iterrows():
             fig2.add_trace(go.Bar(name=row['shift'].upper(),x=['CSAT','FCR %','ABANDON %'],
                 y=[row['csat']/5*100,row['fcr']*100,row['abandon']*100],
-                marker_color=sc.get(row['shift'],C['green']),opacity=0.8))
+                marker_color=sc.get(row['shift'],C['mint']),opacity=0.8))
         ply(fig2,h=260,barmode='group',yaxis=dict(title='%',gridcolor=C['border']))
         st.plotly_chart(fig2,use_container_width=True,config={'displayModeBar':False})
     if len(df)>50:
@@ -408,9 +415,9 @@ def page_overview(df):
         pivot.index=['MON','TUE','WED','THU','FRI'][:len(pivot)]
         fig3=go.Figure(go.Heatmap(
             z=(pivot.values*100).round(1),x=[c.upper() for c in pivot.columns],y=pivot.index.tolist(),
-            colorscale=[[0,C['surface3']],[0.4,rgba(C['cyan'],1)],[1,rgba(C['red'],1)]],
+            colorscale=[[0,C['surface3']],[0.4,rgba(C['sky'],1)],[1,rgba(C['rose'],1)]],
             text=(pivot.values*100).round(1),texttemplate="%{text}%",
-            textfont=dict(size=10,family='Share Tech Mono'),showscale=True,
+            textfont=dict(size=10,family='JetBrains Mono'),showscale=True,
             hovertemplate='%{y} · %{x}<br>ABANDON: %{z}%<extra></extra>'))
         ply(fig3,h=185,xaxis=dict(side='top',gridcolor='rgba(0,0,0,0)'),yaxis=dict(gridcolor='rgba(0,0,0,0)'))
         st.plotly_chart(fig3,use_container_width=True,config={'displayModeBar':False})
@@ -455,23 +462,23 @@ def page_trends(df):
             ay=an[col]*100 if pct else an[col]
             if len(an):
                 fig.add_trace(go.Scatter(x=an['date'],y=ay,mode='markers',name='ANOMALY',
-                    marker=dict(color=C['red'],size=7,symbol='x',line=dict(color=C['red'],width=2))))
+                    marker=dict(color=C['rose'],size=7,symbol='x',line=dict(color=C['rose'],width=2))))
         ply(fig,h=300,yaxis=dict(title=label,gridcolor=C['border']))
         st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':False})
         v=daily[col]
-        sp = f'background:{C["surface2"]};border:1px solid {C["border"]};font-family:Share Tech Mono,monospace;font-size:0.6rem;padding:0.22rem 0.65rem;border-radius:2px;'
-        stats_items=[("MIN",f"{v.min()*100:.1f}%" if pct else f"{v.min():.1f}",C['lime']),
-                     ("MAX",f"{v.max()*100:.1f}%" if pct else f"{v.max():.1f}",C['red']),
-                     ("AVG",f"{v.mean()*100:.1f}%" if pct else f"{v.mean():.1f}",C['cyan']),
+        sp = f'background:{C["surface2"]};border:1px solid {C["border"]};font-family:JetBrains Mono,monospace;font-size:0.6rem;padding:0.22rem 0.65rem;border-radius:2px;'
+        stats_items=[("MIN",f"{v.min()*100:.1f}%" if pct else f"{v.min():.1f}",C['mint']),
+                     ("MAX",f"{v.max()*100:.1f}%" if pct else f"{v.max():.1f}",C['rose']),
+                     ("AVG",f"{v.mean()*100:.1f}%" if pct else f"{v.mean():.1f}",C['sky']),
                      ("ANOMALIES",str(daily[f'{col}_anom'].sum()),C['amber'])]
         pills="".join([f'<span style="{sp}color:{c};">{lb} {sv}</span>' for lb,sv,c in stats_items])
         st.markdown(f'<div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.5rem;">{pills}</div>', unsafe_allow_html=True)
 
     t1,t2,t3,t4=st.tabs(["  AHT  ","  CSAT  ","  ABANDON RATE  ","  FCR  "])
-    with t1: trend_chart('aht_seconds','AHT (S)',300,C['cyan'])
-    with t2: trend_chart('csat_score','CSAT SCORE',4.2,C['green'])
-    with t3: trend_chart('abandon_rate','ABANDON %',0.05,C['red'],pct=True)
-    with t4: trend_chart('fcr_rate','FCR %',0.70,C['lime'],pct=True)
+    with t1: trend_chart('aht_seconds','AHT (S)',300,C['sky'])
+    with t2: trend_chart('csat_score','CSAT SCORE',4.2,C['mint'])
+    with t3: trend_chart('abandon_rate','ABANDON %',0.05,C['rose'],pct=True)
+    with t4: trend_chart('fcr_rate','FCR %',0.70,C['mint'],pct=True)
 
 
 # ── PAGE: TEAMS ───────────────────────────────────────────────────────────────
@@ -490,7 +497,7 @@ def page_teams(df):
         for _,row in agg.iterrows():
             vals=[row['avg_csat']/5,row['avg_fcr'],1-row['avg_aht']/500,1-row['avg_abandon'],row['score']]
             vp=[v*100 for v in vals]+[vals[0]*100]
-            tc=TEAM_COLORS.get(row['team'],C['green'])
+            tc=TEAM_COLORS.get(row['team'],C['mint'])
             fig.add_trace(go.Scatterpolar(r=vp,theta=cats+[cats[0]],fill='toself',name=row['team'],
                 line=dict(color=tc,width=2),fillcolor=rgba(tc,0.08),opacity=0.95))
         ply(fig,h=360,polar=dict(bgcolor=C['surface'],radialaxis=dict(visible=True,range=[0,100],gridcolor=C['border'],tickfont_size=8),angularaxis=dict(gridcolor=C['border'])))
@@ -498,8 +505,8 @@ def page_teams(df):
     with cr:
         section_label("UNIT RANKING")
         for i,(_,row) in enumerate(agg.iterrows()):
-            c=TEAM_COLORS.get(row['team'],C['green'])
-            st.markdown(f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-left:2px solid {c};border-radius:2px;padding:0.75rem 1rem;margin-bottom:0.45rem;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><span style="font-family:Share Tech Mono,monospace;font-size:0.56rem;color:{C["text3"]};">#{i+1:02d}</span><span style="font-family:Rajdhani,sans-serif;font-size:0.9rem;font-weight:600;color:{C["text"]};margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;">{row["team"]}</span></div><span style="font-family:Rajdhani,sans-serif;font-size:1rem;font-weight:700;color:{c};">{row["score"]:.3f}</span></div><div style="font-family:Share Tech Mono,monospace;font-size:0.58rem;color:{C["text3"]};margin-top:0.2rem;">{int(row["agents"])} AGENTS · {int(row["total_calls"]):,} CALLS</div></div>', unsafe_allow_html=True)
+            c=TEAM_COLORS.get(row['team'],C['mint'])
+            st.markdown(f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-left:2px solid {c};border-radius:2px;padding:0.75rem 1rem;margin-bottom:0.45rem;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><span style="font-family:JetBrains Mono,monospace;font-size:0.56rem;color:{C["text3"]};">#{i+1:02d}</span><span style="font-family:Syne,sans-serif;font-size:0.9rem;font-weight:600;color:{C["text"]};margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;">{row["team"]}</span></div><span style="font-family:Syne,sans-serif;font-size:1rem;font-weight:700;color:{c};">{row["score"]:.3f}</span></div><div style="font-family:JetBrains Mono,monospace;font-size:0.58rem;color:{C["text3"]};margin-top:0.2rem;">{int(row["agents"])} AGENTS · {int(row["total_calls"]):,} CALLS</div></div>', unsafe_allow_html=True)
     if 'year' in df.columns and 'month' in df.columns:
         section_label("MONTHLY CSAT TELEMETRY BY TEAM")
         monthly=df.groupby(['year','month','team'])['csat_score'].mean().reset_index()
@@ -507,7 +514,7 @@ def page_teams(df):
         fig2=go.Figure()
         for team in df['team'].unique():
             t=monthly[monthly['team']==team].sort_values('period')
-            tc=TEAM_COLORS.get(team,C['green'])
+            tc=TEAM_COLORS.get(team,C['mint'])
             fig2.add_trace(go.Scatter(x=t['period'],y=t['csat_score'],mode='lines+markers',name=team,line=dict(color=tc,width=2),marker=dict(size=4,color=tc)))
         fig2.add_hline(y=4.2,line_dash="dash",line_color=C['amber'],opacity=0.4,annotation_text="4.2 TGT",annotation_font_size=8,annotation_font_color=C['amber'])
         ply(fig2,h=280,yaxis=dict(title='AVG CSAT',range=[3.0,5.2],gridcolor=C['border']))
@@ -536,7 +543,7 @@ def page_agents(df):
     # Tier summary — 3 full-width cards
     st.markdown(f"""
     <div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.8rem;'>
-      {"".join([f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-top:1px solid {color};border-radius:3px;padding:1.1rem 1.3rem;text-align:center;position:relative;overflow:hidden;"><div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,{color}00,{color},{color}00);"></div><div style="font-family:Share Tech Mono,monospace;font-size:0.54rem;letter-spacing:0.18em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.4rem;">{tier} TIER</div><div style="font-family:Rajdhani,sans-serif;font-size:2.8rem;font-weight:700;color:{color};line-height:1;">{count}</div><div style="font-family:Share Tech Mono,monospace;font-size:0.6rem;color:{C["text3"]};margin-top:0.2rem;">{count/n*100:.0f}% · {desc}</div></div>' for tier,count,color,desc in [("TOP",top_n,C['lime'],"TOP QUARTILE"),("MID",mid_n,C['cyan'],"MIDDLE 50%"),("RISK",risk_n,C['red'],"COACHING NEEDED")]])}
+      {"".join([f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-top:1px solid {color};border-radius:3px;padding:1.1rem 1.3rem;text-align:center;position:relative;overflow:hidden;"><div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,{color}00,{color},{color}00);"></div><div style="font-family:JetBrains Mono,monospace;font-size:0.54rem;letter-spacing:0.18em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.4rem;">{tier} TIER</div><div style="font-family:Syne,sans-serif;font-size:2.8rem;font-weight:700;color:{color};line-height:1;">{count}</div><div style="font-family:JetBrains Mono,monospace;font-size:0.6rem;color:{C["text3"]};margin-top:0.2rem;">{count/n*100:.0f}% · {desc}</div></div>' for tier,count,color,desc in [("TOP",top_n,C['mint'],"TOP QUARTILE"),("MID",mid_n,C['sky'],"MIDDLE 50%"),("RISK",risk_n,C['rose'],"COACHING NEEDED")]])}
     </div>""", unsafe_allow_html=True)
 
     # Score bar — full width
@@ -549,7 +556,7 @@ def page_agents(df):
         fig_bar.add_trace(go.Bar(y=t['agent_name'],x=t['score'],orientation='h',name=tier,
             marker_color=tc,opacity=0.8,
             text=t['score'].apply(lambda v:f"{v:.3f}"),textposition='outside',
-            textfont=dict(size=9,family='Share Tech Mono'),
+            textfont=dict(size=9,family='JetBrains Mono'),
             customdata=t[['avg_csat','avg_fcr','avg_aht','total_calls']].values,
             hovertemplate='<b>%{y}</b><br>SCORE: %{x:.3f}<br>CSAT: %{customdata[0]:.2f}<br>FCR: %{customdata[1]:.1%}<br>AHT: %{customdata[2]:.0f}s<br>CALLS: %{customdata[3]:,}<extra></extra>'))
     ply(fig_bar,h=max(320,n*18+40),xaxis=dict(title='COMPOSITE SCORE',range=[0,1.12],gridcolor=C['border']),yaxis=dict(gridcolor='rgba(0,0,0,0)'),barmode='stack')
@@ -580,11 +587,11 @@ def page_agents(df):
             for team in agent['team'].unique():
                 t=agent[agent['team']==team]
                 fig3.add_trace(go.Scatter(x=t['experience_months'],y=t['avg_fcr']*100,mode='markers',name=team,
-                    marker=dict(color=TEAM_COLORS.get(team,C['green']),size=9,opacity=0.85),
+                    marker=dict(color=TEAM_COLORS.get(team,C['mint']),size=9,opacity=0.85),
                     text=t['agent_name'],hovertemplate='%{text}<br>EXP: %{x}mo · FCR: %{y:.1f}%<extra></extra>'))
         else:
             fig3.add_trace(go.Scatter(x=agent['experience_months'],y=agent['avg_fcr']*100,mode='markers',
-                marker=dict(color=C['green'],size=9),text=agent['agent_name'],
+                marker=dict(color=C['mint'],size=9),text=agent['agent_name'],
                 hovertemplate='%{text}<br>EXP: %{x}mo · FCR: %{y:.1f}%<extra></extra>'))
         ply(fig3,h=300,xaxis=dict(title='EXPERIENCE (MONTHS)',gridcolor=C['border']),yaxis=dict(title='FCR RATE (%)',gridcolor=C['border']))
         st.plotly_chart(fig3,use_container_width=True,config={'displayModeBar':False})
@@ -631,13 +638,13 @@ def page_predictor(df):
         if fi:
             fi_df=pd.DataFrame({'Feature':list(fi.keys()),'Importance':list(fi.values())}).sort_values('Importance',ascending=True).tail(10)
             fig=go.Figure(go.Bar(x=fi_df['Importance'],y=fi_df['Feature'],orientation='h',
-                marker=dict(color=fi_df['Importance'],colorscale=[[0,C['surface3']],[0.5,C['cyan']],[1,C['green']]]),
-                text=fi_df['Importance'].apply(lambda x:f"{x:.3f}"),textposition='outside',textfont=dict(size=9,family='Share Tech Mono')))
+                marker=dict(color=fi_df['Importance'],colorscale=[[0,C['surface3']],[0.5,C['sky']],[1,C['mint']]]),
+                text=fi_df['Importance'].apply(lambda x:f"{x:.3f}"),textposition='outside',textfont=dict(size=9,family='JetBrains Mono')))
             ply(fig,h=280,xaxis=dict(title='IMPORTANCE',gridcolor=C['border']),yaxis=dict(gridcolor='rgba(0,0,0,0)'))
             st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':False})
     with cr:
         section_label("SIGNAL INTERPRETATION")
-        st.markdown(f'<div style="font-family:Share Tech Mono,monospace;font-size:0.65rem;color:{C["text2"]};line-height:1.9;"><span style="color:{C["green"]};">queue×monday [0.363]</span> — Monday backlog amplifies abandons exponentially.<br><br><span style="color:{C["cyan"]};">day_of_week [0.254]</span> — Temporal patterns outperform all agent-level features.<br><br>Implication: staff decisions must use <span style="color:{C["lime"]};">queue forecasting</span> not historical averages.</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:{C["text2"]};line-height:1.9;"><span style="color:{C["mint"]};">queue×monday [0.363]</span> — Monday backlog amplifies abandons exponentially.<br><br><span style="color:{C["sky"]};">day_of_week [0.254]</span> — Temporal patterns outperform all agent-level features.<br><br>Implication: staff decisions must use <span style="color:{C["mint"]};">queue forecasting</span> not historical averages.</div>', unsafe_allow_html=True)
 
     st.markdown("---"); section_label("SCENARIO FORECAST SIMULATOR")
     c1,c2,c3=st.columns(3)
@@ -654,9 +661,9 @@ def page_predictor(df):
     fc1,fc2,fc3=st.columns(3)
     for col,lbl,val,note in [(fc1,"RANDOM FOREST",rfp,"PRIMARY MODEL"),(fc2,"LINEAR REG.",lrp,"BASELINE"),(fc3,"ENSEMBLE AVG",ens,"RF + LR / 2")]:
         crit=val>0.10; over=val>0.05
-        color=C['red'] if crit else (C['amber'] if over else C['lime'])
+        color=C['rose'] if crit else (C['amber'] if over else C['mint'])
         status="■ CRITICAL" if crit else ("⚡ ABOVE TGT" if over else "✓ NOMINAL")
-        col.markdown(f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-top:1px solid {color};border-radius:3px;padding:1.5rem;text-align:center;position:relative;overflow:hidden;"><div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,{color}00,{color},{color}00);"></div><div style="font-family:Share Tech Mono,monospace;font-size:0.54rem;letter-spacing:0.16em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.6rem;">{lbl}</div><div style="font-family:Rajdhani,sans-serif;font-size:3.2rem;font-weight:700;color:{color};line-height:1;text-shadow:0 0 20px {rgba(color,0.4)};">{val*100:.1f}%</div><div style="font-family:Share Tech Mono,monospace;font-size:0.62rem;color:{color};letter-spacing:0.1em;margin-top:0.5rem;">{status}</div><div style="font-family:Share Tech Mono,monospace;font-size:0.56rem;color:{C["text3"]};margin-top:0.25rem;">TGT &lt; 5.0% · {note}</div></div>', unsafe_allow_html=True)
+        col.markdown(f'<div style="background:{C["surface"]};border:1px solid {C["border"]};border-top:1px solid {color};border-radius:3px;padding:1.5rem;text-align:center;position:relative;overflow:hidden;"><div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,{color}00,{color},{color}00);"></div><div style="font-family:JetBrains Mono,monospace;font-size:0.54rem;letter-spacing:0.16em;color:{C["text3"]};text-transform:uppercase;margin-bottom:0.6rem;">{lbl}</div><div style="font-family:Syne,sans-serif;font-size:3.2rem;font-weight:700;color:{color};line-height:1;text-shadow:0 0 20px {rgba(color,0.4)};">{val*100:.1f}%</div><div style="font-family:JetBrains Mono,monospace;font-size:0.62rem;color:{color};letter-spacing:0.1em;margin-top:0.5rem;">{status}</div><div style="font-family:JetBrains Mono,monospace;font-size:0.56rem;color:{C["text3"]};margin-top:0.25rem;">TGT &lt; 5.0% · {note}</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     day_name=['Monday','Tuesday','Wednesday','Thursday','Friday'][dow]
@@ -671,11 +678,11 @@ def page_predictor(df):
         preds.append(float(np.clip(rf.predict(engineer_features(iq))[0],0,1))*100)
     fig2=go.Figure()
     fig2.add_trace(go.Scatter(x=qr,y=preds,mode='lines+markers',
-        line=dict(color=C['green'],width=2.5),marker=dict(size=5,color=C['green']),
-        fill='tozeroy',fillcolor=rgba(C['green'],0.06),
+        line=dict(color=C['mint'],width=2.5),marker=dict(size=5,color=C['mint']),
+        fill='tozeroy',fillcolor=rgba(C['mint'],0.06),
         hovertemplate='QUEUE %{x} → ABANDON %{y:.1f}%<extra></extra>'))
     fig2.add_hline(y=5.0,line_dash="dash",line_color=C['amber'],opacity=0.5,annotation_text="5% TGT",annotation_font_size=8,annotation_font_color=C['amber'])
-    fig2.add_vline(x=queue,line_dash="dot",line_color=C['red'],opacity=0.6,annotation_text=f"NOW: {queue}",annotation_font_size=8,annotation_font_color=C['red'])
+    fig2.add_vline(x=queue,line_dash="dot",line_color=C['rose'],opacity=0.6,annotation_text=f"NOW: {queue}",annotation_font_size=8,annotation_font_color=C['rose'])
     ply(fig2,h=230,xaxis=dict(title='QUEUE DEPTH',gridcolor=C['border']),yaxis=dict(title='PREDICTED ABANDON %',gridcolor=C['border']))
     st.plotly_chart(fig2,use_container_width=True,config={'displayModeBar':False})
 
