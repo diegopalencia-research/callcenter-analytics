@@ -205,7 +205,7 @@ def stat_row(cols_data):
 def alert_box(text, level='warn'):
     cfg = {
         'warn':    (C['warn'],    'rgba(249,115,22,0.07)',  '⚠ ALERT'),
-        'danger':  (C['danger'],  'rgba(239,68,68,0.07)',   '🔴 CRITICAL'),
+        'danger':  (C['danger'],  'rgba(239,68,68,0.07)',   '[CRITICAL]'),
         'info':    (C['accent'],  'rgba(0,212,170,0.07)',   '✓ INFO'),
         'success': (C['success'], 'rgba(34,197,94,0.07)',   '✓ OK'),
     }
@@ -348,7 +348,7 @@ def render_sidebar(df):
 
     st.sidebar.markdown(f"<div style='font-size:0.58rem;letter-spacing:0.14em;color:{C['text3']};text-transform:uppercase;margin-bottom:0.5rem;'>NAVIGATION</div>", unsafe_allow_html=True)
 
-    pages = ["📊 OVERVIEW", "📈 TRENDS", "👥 TEAMS", "🏆 AGENTS", "🤖 PREDICTOR"]
+    pages = ["OVERVIEW", "TRENDS", "TEAMS", "AGENTS", "PREDICTOR"]
     page = st.sidebar.radio("nav", label_visibility="collapsed", options=pages)
 
     st.sidebar.markdown("---")
@@ -580,7 +580,7 @@ def page_trends(df):
         # Fill area
         fig.add_trace(go.Scatter(
             x=daily['date'], y=daily[col],
-            fill='tozeroy', fillcolor=f'{color}15',
+            fill='tozeroy', fillcolor='rgba(0,0,0,0)',
             line=dict(color='rgba(0,0,0,0)'),
             showlegend=False, hoverinfo='skip'
         ))
@@ -696,7 +696,8 @@ def page_teams(df):
                 fill='toself',
                 name=row['team'],
                 line=dict(color=TEAM_COLORS.get(row['team'], C['accent']), width=2),
-                fillcolor=TEAM_COLORS.get(row['team'], C['accent']) + '20',
+                fillcolor=TEAM_COLORS.get(row['team'], C['accent']),
+                opacity=0.12,
                 opacity=0.9
             ))
 
@@ -712,7 +713,7 @@ def page_teams(df):
     with col_r:
         section_title("COMPOSITE RANKING")
         for i, (_, row) in enumerate(teams_agg.iterrows()):
-            medal = ["🥇", "🥈", "🥉", "4th", "5th"][i]
+            medal = f"#{i+1:02d}"
             color = TEAM_COLORS.get(row['team'], C['accent'])
             st.markdown(f"""
             <div style='background:{C["surface"]};border:1px solid {C["border"]};
@@ -801,49 +802,97 @@ def page_agents(df):
     q75 = agent['score'].quantile(0.75)
     q25 = agent['score'].quantile(0.25)
     agent['tier'] = agent['score'].apply(
-        lambda s: '🟢 TOP' if s >= q75 else ('🔴 RISK' if s <= q25 else '⚪ MID')
+        lambda s: 'TOP' if s >= q75 else ('RISK' if s <= q25 else 'MID')
     )
     agent = agent.sort_values('score', ascending=False).reset_index(drop=True)
     agent.index += 1
 
-    # Scatter: CSAT vs AHT
+    # Agent score bar chart — horizontal, clean
+    section_title("COMPOSITE PERFORMANCE SCORE — ALL AGENTS")
+
+    fig_bar = go.Figure()
+    tier_colors = {'TOP': C['success'], 'MID': C['accent2'], 'RISK': C['danger']}
+
+    for tier in ['TOP', 'MID', 'RISK']:
+        t_data = agent[agent['tier'] == tier].sort_values('score', ascending=True)
+        if len(t_data) == 0:
+            continue
+        label_col = 'agent_name'
+        fig_bar.add_trace(go.Bar(
+            y=t_data[label_col],
+            x=t_data['score'],
+            orientation='h',
+            name=tier,
+            marker_color=tier_colors[tier],
+            opacity=0.85,
+            text=t_data['score'].apply(lambda v: f"{v:.3f}"),
+            textposition='outside',
+            textfont=dict(size=9, family='IBM Plex Mono'),
+            customdata=t_data[['avg_csat', 'avg_fcr', 'avg_aht', 'total_calls']].values,
+            hovertemplate=(
+                '<b>%{y}</b><br>'
+                'Score: %{x:.3f}<br>'
+                'CSAT: %{customdata[0]:.2f}<br>'
+                'FCR: %{customdata[1]:.1%}<br>'
+                'AHT: %{customdata[2]:.0f}s<br>'
+                'Calls: %{customdata[3]:,}<extra></extra>'
+            )
+        ))
+
+    apply_layout(fig_bar,
+                 height=max(400, len(agent) * 22),
+                 barmode='stack',
+                 xaxis=dict(title='Composite Score (0–1)', gridcolor=C['border'],
+                            range=[0, 1.15]),
+                 yaxis=dict(gridcolor='rgba(0,0,0,0)', tickfont=dict(size=10)),
+                 margin=dict(l=130, r=60, t=20, b=20))
+    st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
+
+    # CSAT vs AHT quadrant
+    section_title("PERFORMANCE QUADRANT — CSAT vs AHT")
     col_l, col_r = st.columns([3, 2])
 
     with col_l:
-        section_title("CSAT vs AHT — AGENT MAP")
-        color_map = {'🟢 TOP': C['success'], '🔴 RISK': C['danger'], '⚪ MID': C['text3']}
-
         fig = go.Figure()
-        for tier, color in color_map.items():
+        for tier, color in tier_colors.items():
             t_data = agent[agent['tier'] == tier]
             if len(t_data) == 0:
                 continue
-            t_label = tier.replace('🟢 ', '').replace('🔴 ', '').replace('⚪ ', '')
             fig.add_trace(go.Scatter(
                 x=t_data['avg_aht'],
                 y=t_data['avg_csat'],
                 mode='markers+text',
-                name=t_label,
+                name=tier,
                 text=t_data['agent_name'].str.split().str[0],
-                textposition='top right',
-                textfont=dict(size=9, color=C['text3']),
-                marker=dict(color=color, size=10, opacity=0.9,
-                            line=dict(color=C['bg'], width=1)),
+                textposition='top center',
+                textfont=dict(size=8, color=C['text3']),
+                marker=dict(color=color, size=11, opacity=0.9,
+                            line=dict(color=C['bg'], width=1.5)),
                 customdata=t_data[['agent_name', 'total_calls', 'avg_fcr', 'score']].values,
                 hovertemplate=(
                     '<b>%{customdata[0]}</b><br>'
-                    'AHT: %{x:.0f}s<br>'
-                    'CSAT: %{y:.2f}<br>'
-                    'FCR: %{customdata[2]:.1%}<br>'
-                    'Calls: %{customdata[1]:,}<br>'
+                    'AHT: %{x:.0f}s · CSAT: %{y:.2f}<br>'
+                    'FCR: %{customdata[2]:.1%} · Calls: %{customdata[1]:,}<br>'
                     'Score: %{customdata[3]:.3f}<extra></extra>'
                 )
             ))
 
-        fig.add_vline(x=300, line_dash="dash", line_color=C['text3'], opacity=0.4,
-                      annotation_text="300s target", annotation_font_size=9)
-        fig.add_hline(y=4.2, line_dash="dash", line_color=C['text3'], opacity=0.4,
-                      annotation_text="4.2 target", annotation_font_size=9)
+        fig.add_vline(x=300, line_dash="dash", line_color=C['border2'], opacity=0.7,
+                      annotation_text="AHT target 300s",
+                      annotation_font_size=9, annotation_font_color=C['text3'])
+        fig.add_hline(y=4.2, line_dash="dash", line_color=C['border2'], opacity=0.7,
+                      annotation_text="CSAT target 4.2",
+                      annotation_font_size=9, annotation_font_color=C['text3'])
+
+        # Quadrant labels
+        for label, x, y in [
+            ("HIGH PERF", 120, 4.9), ("HIGH AHT", 400, 4.9),
+            ("COACHING", 120, 3.2), ("CRITICAL", 400, 3.2)
+        ]:
+            fig.add_annotation(x=x, y=y, text=label,
+                               font=dict(size=8, color=C['text3'],
+                                         family='IBM Plex Mono'),
+                               showarrow=False, opacity=0.4)
 
         apply_layout(fig, height=380,
                      xaxis=dict(title='Avg AHT (seconds)', gridcolor=C['border']),
@@ -851,36 +900,33 @@ def page_agents(df):
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
     with col_r:
-        section_title("TOP 5 AGENTS")
-        top5 = agent.head(5)
-        for i, (_, row) in enumerate(top5.iterrows()):
-            team_color = TEAM_COLORS.get(row.get('team', ''), C['accent'])
+        section_title("TIER SUMMARY")
+        for tier, color in tier_colors.items():
+            t_agents = agent[agent['tier'] == tier]
+            pct = len(t_agents) / len(agent) * 100
+            bar_w = f"{pct:.0f}%"
             st.markdown(f"""
             <div style='background:{C["surface"]};border:1px solid {C["border"]};
-            border-left:3px solid {team_color};border-radius:5px;
-            padding:0.65rem 1rem;margin-bottom:0.45rem;'>
-              <div style='display:flex;justify-content:space-between;'>
-                <div>
-                  <span style='font-family:"IBM Plex Mono",monospace;font-size:0.55rem;
-                  color:{C["text3"]};'>#{i+1}</span>
-                  <span style='font-family:"IBM Plex Mono",monospace;font-size:0.8rem;
-                  color:{C["text"]};font-weight:500;margin-left:0.4rem;'>
-                  {row['agent_name']}</span>
-                </div>
-                <span style='font-family:"IBM Plex Mono",monospace;font-size:0.85rem;
-                font-weight:600;color:{team_color};'>{row['score']:.3f}</span>
+            border-radius:5px;padding:0.9rem 1.1rem;margin-bottom:0.6rem;'>
+              <div style='display:flex;justify-content:space-between;
+              align-items:center;margin-bottom:0.5rem;'>
+                <span style='font-family:"IBM Plex Mono",monospace;font-size:0.65rem;
+                letter-spacing:0.12em;color:{color};'>{tier}</span>
+                <span style='font-family:"IBM Plex Mono",monospace;font-size:0.75rem;
+                color:{C["text"]};'>{len(t_agents)} agents</span>
               </div>
-              <div style='font-family:"IBM Plex Mono",monospace;font-size:0.6rem;
-              color:{C["text3"]};margin-top:0.2rem;'>
-                CSAT {row['avg_csat']:.2f} · FCR {row['avg_fcr']:.1%} ·
-                {row['total_calls']:,} calls
+              <div style='background:{C["surface3"]};border-radius:2px;height:4px;'>
+                <div style='background:{color};width:{bar_w};height:4px;
+                border-radius:2px;'></div>
               </div>
+              <div style='font-family:"IBM Plex Mono",monospace;font-size:0.58rem;
+              color:{C["text3"]};margin-top:0.35rem;'>{pct:.0f}% of team</div>
             </div>""", unsafe_allow_html=True)
 
-        section_title("RISK FLAGS")
-        risk = agent[agent['tier'] == '🔴 RISK']
+        section_title("COACHING FLAGS")
+        risk = agent[agent['tier'] == 'RISK']
         if len(risk) == 0:
-            alert_box("No agents in risk tier. All performing above Q1 threshold.", level='success')
+            alert_box("No agents in RISK tier.", level='success')
         else:
             for _, row in risk.iterrows():
                 alert_box(
@@ -1097,7 +1143,7 @@ def page_predictor(df):
         mode='lines+markers',
         line=dict(color=C['accent2'], width=2.5),
         marker=dict(size=6),
-        fill='tozeroy', fillcolor=f'{C["accent2"]}15',
+        fill='tozeroy', fillcolor='rgba(14,165,233,0.08)',
         name='Predicted Abandon %',
         hovertemplate='Queue: %{x}<br>Abandon: %{y:.1f}%<extra></extra>'
     ))
@@ -1129,10 +1175,10 @@ def main():
     st.sidebar.markdown(f"""
     <div style='margin-top:0.8rem;font-family:"IBM Plex Mono",monospace;font-size:0.6rem;
     color:{badge_color};letter-spacing:0.08em;'>
-      {'● SUPABASE LIVE' if source == 'supabase' else '○ CSV FALLBACK'}
+      {'[LIVE] SUPABASE' if source == 'supabase' else '[LOCAL] CSV FALLBACK'}
     </div>""", unsafe_allow_html=True)
 
-    page_key = page.split(" ", 1)[1] if " " in page else page
+    page_key = page.strip()
 
     if   page_key == "OVERVIEW":  page_overview(df_f)
     elif page_key == "TRENDS":    page_trends(df_f)
